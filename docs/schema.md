@@ -5,6 +5,48 @@
 
 ## 1. 테이블 구조
 
+### ERD
+
+```mermaid
+erDiagram
+    report ||--o{ log    : "report_id (CASCADE)"
+    report ||--o{ metric : "report_id (CASCADE)"
+    report ||--o{ trace  : "report_id (CASCADE)"
+
+    report {
+        BIGINT   id           PK "AUTO_INCREMENT"
+        VARCHAR  bundle_id    UK "엣지 멱등 키 (128)"
+        VARCHAR  title           "255"
+        VARCHAR  status          "OPEN/ANALYZING/DONE/FAILED"
+        DATETIME window_from     "(3) UTC"
+        DATETIME window_to       "(3) UTC"
+        JSON     trigger_info    "발화 신호 {ts, signal, services[]}"
+        JSON     result          "LLM 결과 {summary, cause, impact, action}"
+        DATETIME created_at      "(3)"
+    }
+    log {
+        BIGINT   id        PK
+        BIGINT   report_id FK
+        DATETIME ts           "(3) UTC — IDX(report_id, ts)"
+        VARCHAR  service      "canonical (128)"
+        JSON     raw          "원본 {line: ...} 무파싱"
+    }
+    metric {
+        BIGINT   id        PK
+        BIGINT   report_id FK
+        DATETIME ts           "(3) UTC — IDX(report_id, ts)"
+        VARCHAR  service      "canonical (128)"
+        JSON     raw          "원본 무파싱 — 필요 시 metric_name/value ALTER"
+    }
+    trace {
+        BIGINT   id        PK
+        BIGINT   report_id FK
+        DATETIME ts           "(3) UTC — IDX(report_id, ts)"
+        VARCHAR  service      "canonical (128)"
+        JSON     raw          "원본 무파싱 — 필요 시 trace_id/span_id ALTER"
+    }
+```
+
 `report`(부모) 1 : N `log` / `metric` / `trace`.
 relation 컬럼은 부모가 아니라 **자식 3종에 `report_id` FK**로 존재한다.
 
