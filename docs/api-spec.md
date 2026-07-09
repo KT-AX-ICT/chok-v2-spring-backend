@@ -106,9 +106,21 @@
 }
 ```
 
-- 필수(프론트 렌더 최소선): `rca.rootCause`, `summary.highlight`, `evidence.*.conclusion`, `impact.affected[]`, `actions.steps[]`
-- optional(LLM 산출 불안정 예상): `rca.confidence`, `evidence.trace.spans`, `evidence.metric.items`, `impact.metrics`, `summary.chips` 등
-- Spring은 JSON 패스스루(저장·반환만). **산출 가능 여부는 에이전트팀 확인 필요 (§6 쟁점 2)**
+**키 ↔ 화면 매핑 · 필수 필드** (FastAPI/에이전트 산출 기준):
+
+| 키 | 화면 구역 | 필수 (렌더 최소선) | optional (못 채우면 키 생략) |
+|---|---|---|---|
+| `rca` | 상세 상단 RCA 결론 블록 | `rootCause`, `propagation` (`"A → B → C"` 문자열) | `confidence` (숫자 %) |
+| `summary` | 요약 탭 | `highlight` (요약 한 문단) | `chips[]`, `errorTags[]`, `neutralTags[]` |
+| `evidence` | 원인 탭 (Log/Trace/Metric 서브탭) | `log`/`trace`/`metric` 각각의 `conclusion` — 모달별 소견 한 문장, 서브에이전트 3종 출력과 1:1 | `log.lines[]`, `trace.spans[]`, `metric.items[]`, 각 `source` |
+| `impact` | 영향 탭 | `affected[]` (`[{service, ...}]`) | `metrics[]`, `affected[].errors`/`type` |
+| `actions` | 조치 탭 | `steps[]` (문자열 배열) | `recovery` |
+
+- **5개 키 이름·존재는 고정 계약** — 프론트가 키 이름으로 화면을 그리므로 키 하나가 빠지면 해당 탭이 통째로 빈 화면
+- optional 필드는 **`null`을 넣지 말고 키 자체를 생략** — 프론트가 생략 렌더
+- ⚠️ **`severity`는 result 안이 아니라 PATCH 바디 최상위** (§5.2) — DB 컬럼으로 저장돼 대시보드 집계·목록 필터에 쓰임
+- 4키 → 5키 배경: 프론트 상세가 RCA 결론 블록(요지)과 원인 탭(근거)을 분리 렌더 → 구 `cause`를 `rca`(결론) + `evidence`(근거)로 분리, `action` → `actions` 개명, `impact` 구조 프론트안 채택
+- Spring은 JSON 패스스루(저장·반환만) — 이 구조를 만드는 책임은 FastAPI(LLM 프롬프트) 쪽. **산출 가능 여부는 에이전트팀 확인 필요 (§6 쟁점 2)**, 구조화 근거(`lines`·`spans`·`items`)가 무리면 `conclusion`만 채우는 것으로 시작
 
 ## 3. FastAPI 상세 (수집기 → FastAPI)
 
