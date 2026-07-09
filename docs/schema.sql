@@ -12,14 +12,16 @@ CREATE TABLE report (
   id           BIGINT PRIMARY KEY AUTO_INCREMENT,
   bundle_id    VARCHAR(128) NOT NULL,           -- 엣지 생성 멱등 키 (재시도 dedupe, MVP-정의서 §7.3)
   title        VARCHAR(255),
-  status       VARCHAR(32)  NOT NULL DEFAULT 'OPEN',  -- OPEN / ANALYZING / DONE / FAILED
+  status       VARCHAR(32)  NOT NULL DEFAULT 'OPEN',  -- OPEN / ANALYZING / DONE / FAILED (내부 전용 — 프론트 조회는 DONE만, api-spec v0.2.1)
+  severity     VARCHAR(16),                     -- HIGH / MID / LOW — LLM 판정, PATCH DONE 시 필수 기록. 분석 전 NULL (api-spec v0.2)
   window_from  DATETIME(3),                     -- 조사 대상 시간 구간 시작 (UTC)
   window_to    DATETIME(3),                     -- 조사 대상 시간 구간 끝 (UTC)
-  trigger_info JSON,                            -- 발화 신호 {ts, signal, services[]} — RCA 입력·상세 화면 표시용
-  result       JSON,                            -- LLM 분석 결과 {summary, cause, impact, action} — FastAPI가 PATCH로 요청, Spring이 기록
+  trigger_info JSON,                            -- 발화 신호 {ts, signal, services[]} — RCA 입력·목록 type/service/detectedAt 파생 원천
+  result       JSON,                            -- LLM 분석 결과 detail 5키 {rca, summary, evidence, impact, actions} (api-spec v0.2) — FastAPI가 PATCH로 요청, Spring이 기록
   created_at   DATETIME(3)  DEFAULT CURRENT_TIMESTAMP(3),
   UNIQUE KEY uq_report_bundle (bundle_id),          -- 멱등: 같은 번들 재전송 → 409 (기존 report_id 반환)
-  INDEX idx_report_status_created (status, created_at)  -- 목록 status 필터 + 최신순 페이징, dashboard 집계
+  INDEX idx_report_status_created (status, created_at)  -- DONE 필터 + 최신순 페이징, dashboard 집계
+  -- severity 필터·highCount는 이 인덱스의 DONE 범위 스캔으로 충분 (report 수백 건 수준) — 병목 시 (status, severity, created_at) 추가
 );
 
 CREATE TABLE log (
