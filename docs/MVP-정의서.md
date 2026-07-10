@@ -185,6 +185,7 @@ MVP 통과 조건 (§2 DoD):
 4. 검증 에이전트 도입 (API-06, FR-A-05), 근거 보강 추가 조회 (API-05, FR-A-04)
 5. config·baseline pull (EDGE-08·API-04, 보류 — 팀 승인 후)
 6. 실시간 분석 과정 표시(실시간 view) — 발표 데모 가치 재평가 시 (D-018로 MVP 제외)
+7. 분석 중(OPEN/ANALYZING) 리포트 행 노출 — 목록에 "분석 중" 상태 표시. MVP는 DONE만 노출(api-spec v0.2.1)이라 `severity`·`summary` null 케이스 없음 — 도입 시 null 계약·status 재노출 필요
 
 ---
 
