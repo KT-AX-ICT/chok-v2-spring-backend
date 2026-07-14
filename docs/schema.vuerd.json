@@ -43,7 +43,7 @@
     ],
     "indexIds": [
       "idx-report-status-created",
-      "uq-report-bundle",
+      "uq-report-trigger",
       "idx-log-report-ts",
       "idx-metric-report-ts",
       "idx-trace-report-ts"
@@ -58,24 +58,22 @@
         "comment": "RCA 리포트 (부모) — 저장 주체 Spring, A안 7/7 확정",
         "columnIds": [
           "col-report-id",
-          "col-report-bundle-id",
-          "col-report-title",
           "col-report-status",
           "col-report-severity",
           "col-report-window-from",
           "col-report-window-to",
+          "col-report-trigger-time",
           "col-report-trigger-info",
           "col-report-result",
           "col-report-created-at"
         ],
         "seqColumnIds": [
           "col-report-id",
-          "col-report-bundle-id",
-          "col-report-title",
           "col-report-status",
           "col-report-severity",
           "col-report-window-from",
           "col-report-window-to",
+          "col-report-trigger-time",
           "col-report-trigger-info",
           "col-report-result",
           "col-report-created-at"
@@ -208,53 +206,33 @@
           "createAt": 1783561483652
         }
       },
-      "col-report-bundle-id": {
-        "id": "col-report-bundle-id",
+      "col-report-trigger-time": {
+        "id": "col-report-trigger-time",
         "tableId": "tbl-report",
-        "name": "bundle_id",
-        "comment": "엣지 멱등 키 — uq_report_bundle",
-        "dataType": "VARCHAR(128)",
+        "name": "trigger_time",
+        "comment": "trigger_info.trigger_time 승격 (UTC) — detectedAt 원천 + 멱등키 (uq_report_trigger)",
+        "dataType": "DATETIME(3)",
         "default": "",
-        "options": 12,
+        "options": 8,
         "ui": {
           "keys": 0,
-          "widthName": 60,
-          "widthComment": 181,
-          "widthDataType": 81,
+          "widthName": 73,
+          "widthComment": 420,
+          "widthDataType": 69,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1783561483652,
-          "createAt": 1783561483652
-        }
-      },
-      "col-report-title": {
-        "id": "col-report-title",
-        "tableId": "tbl-report",
-        "name": "title",
-        "comment": "",
-        "dataType": "VARCHAR(255)",
-        "default": "",
-        "options": 0,
-        "ui": {
-          "keys": 0,
-          "widthName": 60,
-          "widthComment": 60,
-          "widthDataType": 81,
-          "widthDefault": 60
-        },
-        "meta": {
-          "updateAt": 1783561483652,
-          "createAt": 1783561483652
+          "updateAt": 1783561643295,
+          "createAt": 1783561643295
         }
       },
       "col-report-status": {
         "id": "col-report-status",
         "tableId": "tbl-report",
         "name": "status",
-        "comment": "OPEN/ANALYZING/DONE/FAILED (내부 전용 — 프론트 조회는 DONE만)",
+        "comment": "DONE (후순위: OPEN/ANALYZING/FAILED) — 내부 전용, 프론트 조회는 DONE만 (7/14 D-023)",
         "dataType": "VARCHAR(32)",
-        "default": "OPEN",
+        "default": "DONE",
         "options": 8,
         "ui": {
           "keys": 0,
@@ -332,7 +310,7 @@
         "id": "col-report-trigger-info",
         "tableId": "tbl-report",
         "name": "trigger_info",
-        "comment": "발화 신호 {timestamp, modality[]} (D-021) — detectedAt 파생 원천",
+        "comment": "발화 신호 {trigger_time, triggered_by[]} (D-023) — triggered_by=감지 모달리티",
         "dataType": "JSON",
         "default": "",
         "options": 0,
@@ -352,7 +330,7 @@
         "id": "col-report-result",
         "tableId": "tbl-report",
         "name": "result",
-        "comment": "LLM 결과 detail 5키 {rca, summary, evidence, impact, actions} — FastAPI가 PATCH, Spring이 기록",
+        "comment": "LLM 결과 detail 5키 {rca, summary, evidence, impact, actions} — FastAPI가 POST로 저장 (D-023 통합)",
         "dataType": "JSON",
         "default": "",
         "options": 0,
@@ -794,20 +772,20 @@
           "createAt": 1783561483652
         }
       },
-      "uq-report-bundle": {
-        "id": "uq-report-bundle",
-        "name": "uq_report_bundle",
+      "uq-report-trigger": {
+        "id": "uq-report-trigger",
+        "name": "uq_report_trigger",
         "tableId": "tbl-report",
         "indexColumnIds": [
-          "50zn77NoVot98182S-Q-Q"
+          "uq-inc-tt"
         ],
         "seqIndexColumnIds": [
-          "50zn77NoVot98182S-Q-Q"
+          "uq-inc-tt"
         ],
         "unique": true,
         "meta": {
-          "updateAt": 1783561483652,
-          "createAt": 1783561483652
+          "updateAt": 1783561643295,
+          "createAt": 1783561643295
         }
       },
       "idx-log-report-ts": {
@@ -886,14 +864,14 @@
           "createAt": 1783561483652
         }
       },
-      "50zn77NoVot98182S-Q-Q": {
-        "id": "50zn77NoVot98182S-Q-Q",
-        "indexId": "uq-report-bundle",
-        "columnId": "col-report-bundle-id",
+      "uq-inc-tt": {
+        "id": "uq-inc-tt",
+        "indexId": "uq-report-trigger",
+        "columnId": "col-report-trigger-time",
         "orderType": 1,
         "meta": {
-          "updateAt": 1783561483652,
-          "createAt": 1783561483652
+          "updateAt": 1783561643295,
+          "createAt": 1783561643295
         }
       },
       "FnUSqGBG8mt9KIVUvln_9": {

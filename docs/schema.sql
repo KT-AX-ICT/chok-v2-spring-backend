@@ -11,18 +11,18 @@
 
 CREATE TABLE report (
   id           BIGINT PRIMARY KEY AUTO_INCREMENT,
-  bundle_id    VARCHAR(128) NOT NULL,           -- 엣지 생성 멱등 키 (재시도 dedupe, MVP-정의서 §7.3)
-  title        VARCHAR(255),
-  status       VARCHAR(32)  NOT NULL DEFAULT 'OPEN',  -- OPEN / ANALYZING / DONE / FAILED (내부 전용 — 프론트 조회는 DONE만, api-spec v0.2.1)
-  severity     VARCHAR(16),                     -- HIGH / MID / LOW — 컬럼만 신설, PATCH DONE 필수 검증 완화(D-022). LLM 판정 연동 후속, NULL 허용
-  window_from  DATETIME(3),                     -- 조사 대상 시간 구간 시작 (UTC)
-  window_to    DATETIME(3),                     -- 조사 대상 시간 구간 끝 (UTC)
-  trigger_info JSON,                            -- 발화 신호 {timestamp, modality[]} (D-021) — 목록 detectedAt 파생 원천 (type/service 원천은 api-spec §6 쟁점 3)
-  result       JSON,                            -- LLM 분석 결과 detail 5키 {rca, summary, evidence, impact, actions} (api-spec v0.2) — FastAPI가 PATCH로 요청, Spring이 기록
+  status       VARCHAR(32)  NOT NULL DEFAULT 'DONE',  -- DONE (7/14 통합 D-023: 분석 완료 후 저장이라 DONE 직생성). OPEN/ANALYZING/FAILED 상태기계는 후순위. 내부 전용 — 프론트 조회는 DONE만 (api-spec v0.2.1)
+  severity     VARCHAR(16),                     -- HIGH / MID / LOW — 컬럼만 신설, 필수 검증 완화(D-022). LLM 판정 연동 후속, NULL 허용
+  window_from  DATETIME(3),                     -- 조사 대상 시간 구간 시작 (UTC) — window.start
+  window_to    DATETIME(3),                     -- 조사 대상 시간 구간 끝 (UTC) — window.end
+  trigger_time DATETIME(3)  NOT NULL,           -- 트리거 발화 시각 (UTC) — trigger_info.trigger_time 승격 컬럼. 목록 detectedAt 원천 + 멱등키 (7/14 D-023)
+  trigger_info JSON,                            -- 발화 신호 {trigger_time, triggered_by[]} (D-023) — triggered_by=감지 모달리티(log/metric/trace, 서비스명 아님)
+  result       JSON,                            -- LLM 분석 결과 detail 5키 {rca, summary, evidence, impact, actions} — FastAPI가 POST로 저장 (7/14 통합 D-023)
   created_at   DATETIME(3)  DEFAULT CURRENT_TIMESTAMP(3),
-  UNIQUE KEY uq_report_bundle (bundle_id),          -- 멱등: 같은 번들 재전송 → 409 (기존 report_id 반환)
+  UNIQUE KEY uq_report_trigger (trigger_time),  -- 멱등 (7/14 D-023): bundle_id 대체 — 같은 트리거 시각 재전송 → 409 DUPLICATE_TRIGGER. 콘텐츠 파생이라 재시도해도 동일 키. 재분석은 id기반 UPDATE라 새 INSERT 없음 → 단일키로 충분. NOT NULL 필수(UNIQUE는 NULL을 서로 다르게 취급)
   INDEX idx_report_status_created (status, created_at)  -- DONE 필터 + 최신순 페이징, dashboard 집계
   -- severity 필터·highCount는 이 인덱스의 DONE 범위 스캔으로 충분 (report 수백 건 수준) — 병목 시 (status, severity, created_at) 추가
+  -- detectedAt 정렬(api-spec §4.1 화이트리스트)은 trigger_time 컬럼 직접 정렬 — JSON 추출 불필요
 );
 
 CREATE TABLE log (
