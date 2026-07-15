@@ -3,6 +3,13 @@
 > 작업 기록. 최신이 위로. 형식: `- HH:MM 내용`
 > **아카이브 규칙**: 당일 기준 이틀 이상 지난 날짜 섹션은 [`WORKLOG-ARCHIVE.md`](./WORKLOG-ARCHIVE.md)로 이동 (worklog 갱신 시마다 검사).
 
+## 2026-07-15 (화)
+
+- 11:05 **내부 리포트 저장 API `POST /api/internal/reports` 구현·E2E 검증 (SVC-01, 슬라이스 1.5)** — 번들+결과를 report+3종 한 트랜잭션 저장, `trigger_time` UNIQUE 멱등(재전송 409 DUPLICATE_TRIGGER), 필수·timestamp 형식 검증(422 INVALID_PAYLOAD), 공통 에러 봉투 `{error:{code,message}}`. timestamp는 ISO`Z`·공백형 둘 다 수용(api-spec §6 쟁점6 미결 대응). curl로 201/409/422·양 형식 UTC 저장(ms 보존)·빈 service `""` 전량 확인. 커밋 `259a59f`
+- 10:50 **크로스컷 수정 2건 (저장 검증 중 발견)** — ① Boot4=Jackson3인데 Hibernate7 JSON 매퍼는 Jackson2 전제 → `FormatMapper`를 Jackson3(tools.jackson)로 직접 구현해 주입 ② JVM 기본 TZ(KST)와 커넥션 UTC 불일치로 `LocalDateTime` −9h 밀림 → main에서 JVM UTC 고정(schema.sql UTC 계약 정합). 커밋 `178bfe1`
+- 10:35 **JPA 엔티티 4종 + 레포지토리 (슬라이스 1.5 착수)** — report(JSON `trigger_info`·`result` 패스스루) + log/metric/trace(공통 골격 `@MappedSuperclass SignalRow`로 중복 제거). `ddl-auto=validate`로 schema.sql과 1:1 정합 확인 — 엔티티 없어 무검증이던 validate가 실검증으로 전환. 커밋 `52b62ee`
+- 10:00 **MySQL 연결·Docker 배포 구성** — H2 제거 MySQL 단일화, application.yaml datasource+`ddl-auto=validate`, Dockerfile(멀티스테이지·non-root)+compose(mysql:8.4·schema.sql init·healthcheck·127.0.0.1 바인딩), `.env` 시크릿 분리. compose up 후 4테이블 생성·앱↔DB 연결 확인. 커밋 `6459bcb`·`f805781`
+
 ## 2026-07-10 (금)
 
 - 11:20 **노션 🔌 API 명세서 페이지를 로컬 정본(7/10 개정)으로 전체 교체** — D-021·D-022 반영본으로 동기화(본문 replace + 비고 속성 갱신). 7/7 전례(부분 치환 이스케이프 실패)에 따라 전체 교체 방식. §4.1에 status 파라미터 불채택 명시 블록 추가. ⚠️ 기존 페이지의 인라인 discussion(§1.2·"분석 중"·§3.1·§4.2 4건)은 본문 교체로 앵커가 떨어졌을 수 있음 — 확인 필요. 로컬 docs = 노션 일치 상태
@@ -20,6 +27,7 @@
 - [ ] **연지에게 검토 요청 알리기** — MVP 정의서 v0.3·슬라이스 v0.4 산출물 DB '검토 요청' 전환 완료 (7/7 15:35). 메시지에 D-018 이슈보드 링크 포함 권장
 
 **미해결**
+- [ ] Q-007: 목록 아이템 `type`·`service` 원천 (api-spec §6 쟁점3) — schema.sql에 컬럼 없고 detail 5키에도 없음. Step 3(조회) 목록에서 마주침 → severity 완화(D-022) 선례 따라 우선 null/best-effort, 팀 확정 후 컬럼화 여부 결정 (`type`=LLM 판정 저장 경로, `service`=trigger에서 서비스명 제거로 파생 불가)
 - [ ] Q-006: agent 구조(단일 vs 3종+종합) 결정 대기 (예지·가희, ~7/9) → 결정 시 MVP-정의서 §4·슬라이스 1.4·S2 갱신
 - [ ] Q-005(svc_kill 트리거) 공식 확정 → MVP-정의서 §5·슬라이스 S4 취소선 정리 (Perf 분석과 일치, 근거 확보됨)
 - [ ] S1 1.7(/ingest 최소버전) 담당 확정 — 잠정 고유경·박가희
