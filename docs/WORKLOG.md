@@ -5,6 +5,8 @@
 
 ## 2026-07-15 (화)
 
+- 11:45 **Docker 배포 E2E 검증 — 슬라이스 1.5(Spring) 완료** — 앱 이미지 재빌드 후 8080 실배포에서 저장(POST)→목록/상세/대시보드 전 흐름 통과, named volume 데이터 유지 확인. compose 하드닝(127.0.0.1 바인딩·non-root)도 실배포 반영. (검증 — 코드 커밋 없음)
+- 11:30 **프론트 리포트 조회 API 3종 (SVC-02, 슬라이스 1.5)** — GET `/api/reports`(목록·severity/from·to/search/sort 필터·Page 포맷)·`/{id}`(상세 봉투 `{report,counts,detail}`·404)·`/dashboard`(KPI 3종+최근5). summary=`result.summary.highlight` 파생, `type`·`service`는 Q-007로 null, search=JSON `json_value` LIKE, from/to·today는 KST 경계, 정렬 화이트리스트(임의 컬럼 정렬 차단). curl 8종 검증. 커밋 `93d614a`
 - 11:05 **내부 리포트 저장 API `POST /api/internal/reports` 구현·E2E 검증 (SVC-01, 슬라이스 1.5)** — 번들+결과를 report+3종 한 트랜잭션 저장, `trigger_time` UNIQUE 멱등(재전송 409 DUPLICATE_TRIGGER), 필수·timestamp 형식 검증(422 INVALID_PAYLOAD), 공통 에러 봉투 `{error:{code,message}}`. timestamp는 ISO`Z`·공백형 둘 다 수용(api-spec §6 쟁점6 미결 대응). curl로 201/409/422·양 형식 UTC 저장(ms 보존)·빈 service `""` 전량 확인. 커밋 `259a59f`
 - 10:50 **크로스컷 수정 2건 (저장 검증 중 발견)** — ① Boot4=Jackson3인데 Hibernate7 JSON 매퍼는 Jackson2 전제 → `FormatMapper`를 Jackson3(tools.jackson)로 직접 구현해 주입 ② JVM 기본 TZ(KST)와 커넥션 UTC 불일치로 `LocalDateTime` −9h 밀림 → main에서 JVM UTC 고정(schema.sql UTC 계약 정합). 커밋 `178bfe1`
 - 10:35 **JPA 엔티티 4종 + 레포지토리 (슬라이스 1.5 착수)** — report(JSON `trigger_info`·`result` 패스스루) + log/metric/trace(공통 골격 `@MappedSuperclass SignalRow`로 중복 제거). `ddl-auto=validate`로 schema.sql과 1:1 정합 확인 — 엔티티 없어 무검증이던 validate가 실검증으로 전환. 커밋 `52b62ee`
