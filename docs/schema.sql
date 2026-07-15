@@ -1,4 +1,4 @@
--- RCA 저장 스키마 (MySQL 8.0+)
+-- RCA 저장 스키마 (MySQL 8.4.9 LTS)
 -- report(부모) 1 : N log / metric / trace
 -- 3종 공통 골격: { report_id, ts, service, raw }
 --   ts      = 정규화된 타임스탬프, UTC 고정 (로그 원본이 µs 정밀도라 DATETIME(3)로 ms 보존)

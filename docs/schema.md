@@ -1,11 +1,12 @@
 # RCA 저장 스키마 설계서
 
-> 상태: **확정** · DBMS: MySQL 8.0+ · DDL: [`schema.sql`](./schema.sql)
+> 상태: **확정** · DBMS: MySQL 8.4.9 LTS · DDL: [`schema.sql`](./schema.sql)
 > DDL 소유: **Spring 단독** (A안, 7/7 확정) — FastAPI는 DB에 직접 접근하지 않는다.
 > **7/9**: `report.severity` 컬럼 추가 (api-spec v0.2 — 대시보드 `highCount`·목록 severity 필터의 원천, PATCH DONE 시 LLM 판정 기록) · `result` 키 계약 4키 → **detail 5키**(`rca·summary·evidence·impact·actions`)로 갱신.
 > **7/10① (D-021)**: `trigger_info` 2키 축소 `{timestamp, modality[]}` — signal·서비스명 제거(D-020 확장) · 자식 3종 `raw` JSON→**TEXT** (행당 원본 한 줄, RCA 분석 DB 미경유).
 > **7/10② (D-022)**: 전달 계약 필드명 `ts`→`timestamp`·`window` `start/end` 개명 — **DB 컬럼은 `ts`·`window_from/to` 유지**, JSON↔컬럼 매핑은 Spring 몫. `severity`는 컬럼·계약만 신설(PATCH DONE 필수 검증 완화, LLM 판정 연동 후속).
 > **7/14 (D-023)**: `report` 개편 — `bundle_id`·`title` 컬럼·`uq_report_bundle` **DROP** · `trigger_info` 개명 `{trigger_time, triggered_by[]}` · **`trigger_time` 컬럼 승격**(detectedAt 원천 + 멱등키) · 멱등키 = **`UNIQUE(trigger_time)`**(엣지가 키를 안 보내 콘텐츠 파생으로 판별, 409 `DUPLICATE_TRIGGER`. 재분석=id기반 UPDATE라 단일키 충분) · 저장이 분석 완료 후 1회 POST라 `status` 기본 `DONE`.
+> **7/14**: DB **MySQL 8.0+ → 8.4.9 LTS** 업그레이드 — 스키마 DDL 변경 없음(`DATETIME(3)`·`JSON`·`TEXT`·`UNIQUE` 동일), 버전 라벨·Testcontainers 이미지 태그(`mysql:8.4`)만 갱신.
 
 ## 1. 테이블 구조
 
@@ -155,7 +156,7 @@ public class Log {
 **장치부터**: `schema.sql`을 Flyway `V1__init.sql`로 채택 + `spring.jpa.hibernate.ddl-auto=validate`.
 → 엔티티↔DDL 정합이 **앱 기동마다 자동 검증**된다 (컬럼 타입·이름 어긋나면 기동 실패). 이게 정합성 테스트의 절반.
 
-나머지 절반 — `@DataJpaTest`(Testcontainers MySQL 8) 한 클래스로:
+나머지 절반 — `@DataJpaTest`(Testcontainers `mysql:8.4`) 한 클래스로:
 
 | # | 테스트 | 검증 대상 |
 |---|---|---|

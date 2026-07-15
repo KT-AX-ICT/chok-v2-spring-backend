@@ -4,8 +4,8 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": 0,
-    "scrollLeft": -510,
+    "scrollTop": -13.3333,
+    "scrollLeft": -73.9886,
     "zoomLevel": 1,
     "show": 487,
     "database": 4,
@@ -213,16 +213,16 @@
         "comment": "trigger_info.trigger_time 승격 (UTC) — detectedAt 원천 + 멱등키 (uq_report_trigger)",
         "dataType": "DATETIME(3)",
         "default": "",
-        "options": 8,
+        "options": 12,
         "ui": {
           "keys": 0,
-          "widthName": 73,
-          "widthComment": 420,
+          "widthName": 66,
+          "widthComment": 447,
           "widthDataType": 69,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1783561643295,
+          "updateAt": 1784015728162,
           "createAt": 1783561643295
         }
       },
@@ -237,7 +237,7 @@
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 330,
+          "widthComment": 496,
           "widthDataType": 75,
           "widthDefault": 60
         },
@@ -257,7 +257,7 @@
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 320,
+          "widthComment": 355,
           "widthDataType": 75,
           "widthDefault": 60
         },
@@ -317,7 +317,7 @@
         "ui": {
           "keys": 0,
           "widthName": 63,
-          "widthComment": 380,
+          "widthComment": 420,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -337,7 +337,7 @@
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 480,
+          "widthComment": 535,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -457,7 +457,7 @@
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 108,
+          "widthComment": 142,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -557,7 +557,7 @@
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 65,
+          "widthComment": 112,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -657,7 +657,7 @@
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 65,
+          "widthComment": 112,
           "widthDataType": 60,
           "widthDefault": 60
         },
@@ -679,7 +679,7 @@
             "col-report-id"
           ],
           "x": 620,
-          "y": 208,
+          "y": 196,
           "direction": 1
         },
         "end": {
@@ -706,8 +706,8 @@
           "columnIds": [
             "col-report-id"
           ],
-          "x": 977,
-          "y": 356,
+          "x": 1035,
+          "y": 332,
           "direction": 8
         },
         "end": {
@@ -734,8 +734,8 @@
           "columnIds": [
             "col-report-id"
           ],
-          "x": 1334,
-          "y": 208,
+          "x": 1450,
+          "y": 196,
           "direction": 2
         },
         "end": {
