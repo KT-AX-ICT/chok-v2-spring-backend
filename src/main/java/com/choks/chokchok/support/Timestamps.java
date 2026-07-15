@@ -18,7 +18,15 @@ public final class Timestamps {
     private static final DateTimeFormatter SPACE =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SSS]");
 
+    private static final DateTimeFormatter OUT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private Timestamps() {}
+
+    /** 응답용 출력 포맷 (UTC, 초 단위). */
+    public static String format(LocalDateTime t) {
+        return t == null ? null : OUT.format(t);
+    }
 
     public static LocalDateTime parseUtc(String s) {
         if (s == null || s.isBlank()) {

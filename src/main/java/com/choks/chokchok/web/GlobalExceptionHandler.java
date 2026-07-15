@@ -2,6 +2,7 @@ package com.choks.chokchok.web;
 
 import com.choks.chokchok.service.DuplicateTriggerException;
 import com.choks.chokchok.service.InvalidPayloadException;
+import com.choks.chokchok.service.ReportNotFoundException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,12 @@ public class GlobalExceptionHandler {
             err.put("reportId", e.getReportId());
         }
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", err));
+    }
+
+    @ExceptionHandler(ReportNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> notFound(ReportNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", errorBody("REPORT_NOT_FOUND", e.getMessage())));
     }
 
     @ExceptionHandler({InvalidPayloadException.class, HttpMessageNotReadableException.class})
