@@ -1,3 +1,13 @@
 spring:
   application:
     name: chokchok
+  datasource:
+    # 기본값은 로컬 docker compose 기준. compose/배포는 DB_* 환경변수로 덮어씀
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:chokchok}?serverTimezone=UTC&characterEncoding=UTF-8
+    username: ${DB_USER:chokchok}
+    password: ${DB_PASSWORD:chokchok}
+  jpa:
+    hibernate:
+      # DDL 소유는 schema.sql(단독). Hibernate는 엔티티↔테이블 정합만 검증
+      ddl-auto: validate
+    open-in-view: false

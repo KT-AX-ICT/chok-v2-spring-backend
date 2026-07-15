@@ -1,0 +1,41 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-chokchok}
+      MYSQL_USER: ${DB_USER:-chokchok}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-chokchok}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      TZ: UTC
+    # 스키마는 UTC 고정(schema.sql) — 서버 타임존도 UTC로 맞춤
+    command: --default-time-zone=+00:00
+    ports:
+      # 호스트 3306은 로컬 MySQL이 점유 → 3307로 노출. 앱은 내부망 db:3306으로 붙어 무관.
+      # 호스트 툴(Workbench 등)에서 컨테이너 DB 붙을 땐 localhost:3307
+      - "3307:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      # 최초 기동(빈 데이터 디렉터리)에만 실행됨. 스키마 바꾸면 volume 삭제 후 재기동
+      - ./docs/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-chokchok}
+      DB_USER: ${DB_USER:-chokchok}
+      DB_PASSWORD: ${DB_PASSWORD:-chokchok}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

@@ -40,3 +40,6 @@ out/
 .bkit/
 
 docs/Dataset/
+
+### secrets ###
+.env
