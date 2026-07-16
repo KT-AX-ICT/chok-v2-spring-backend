@@ -3,6 +3,10 @@
 > 작업 기록. 최신이 위로. 형식: `- HH:MM 내용`
 > **아카이브 규칙**: 당일 기준 이틀 이상 지난 날짜 섹션은 [`WORKLOG-ARCHIVE.md`](./WORKLOG-ARCHIVE.md)로 이동 (worklog 갱신 시마다 검사).
 
+## 2026-07-16 (목)
+
+- 11:19 **조회 API 버그픽스 2건 (SVC-02 후속) + Docker E2E 재검증** — 어제 조회 API 리뷰 중 발견한 2건 처리. ① 조회 파라미터 파싱 실패가 **500** 나던 것 → `GlobalExceptionHandler`에 `MethodArgumentTypeMismatchException`(`{id}` 타입)·`DateTimeParseException`(`from`/`to` 날짜) 추가해 저장 경로와 동일한 **422 `INVALID_PAYLOAD`** 봉투로 통일(해피패스만 검증돼 사각지대였던 실패경로). ② 날짜 필터·todayCount 축을 `createdAt`(저장 시각)→`triggerTime`(=detectedAt, 장애 발생 시각)으로 정정 — 정렬 화이트리스트(detectedAt 제공)와 필터축 불일치 해소. 실배포 8080 검증: `?from=oops`·`/reports/abc` 422, seed(trigger_time 7/10·created_at 7/16)로 `from/to=7/10` 1건·`7/16` 0건 = 축 detectedAt 확정, 앱 clean 부팅으로 파생 쿼리 메서드명 검증. 커밋 `e29f55b`
+
 ## 2026-07-15 (화)
 
 - 11:45 **Docker 배포 E2E 검증 — 슬라이스 1.5(Spring) 완료** — 앱 이미지 재빌드 후 8080 실배포에서 저장(POST)→목록/상세/대시보드 전 흐름 통과, named volume 데이터 유지 확인. compose 하드닝(127.0.0.1 바인딩·non-root)도 실배포 반영. (검증 — 코드 커밋 없음)
