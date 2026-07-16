@@ -2,6 +2,14 @@
 
 > [`WORKLOG.md`](./WORKLOG.md)에서 이틀 이상 지난 날짜 섹션을 이동 보관. 최신이 위로.
 
+## 2026-07-10 (금)
+
+- 11:20 **노션 🔌 API 명세서 페이지를 로컬 정본(7/10 개정)으로 전체 교체** — D-021·D-022 반영본으로 동기화(본문 replace + 비고 속성 갱신). 7/7 전례(부분 치환 이스케이프 실패)에 따라 전체 교체 방식. §4.1에 status 파라미터 불채택 명시 블록 추가. ⚠️ 기존 페이지의 인라인 discussion(§1.2·"분석 중"·§3.1·§4.2 4건)은 본문 교체로 앵커가 떨어졌을 수 있음 — 확인 필요. 로컬 docs = 노션 일치 상태
+- 11:09 **노션 API 명세서(진행중 페이지) ↔ 로컬 대조 후 항목별 채택 확정 (D-022)** — 노션안 채택: `ts`→`timestamp` 전면 개명(DB 컬럼 `ts` 유지)·`window` `start/end`(`windowStart/End`)·목록 `type`=LLM 판정·후순위 `POST/GET /ingest/{id}`. 로컬안 채택: raw string(D-021)·`status` 쿼리 파라미터 불채택·쟁점 3 재작성·버전 라벨은 노션 기준 v0.2.1 유지(확정은 명일 회의). 추가 결정: **결과 PATCH 전부 DONE 처리**(ANALYZING·FAILED 후순위), severity 컬럼·계약만 신설(필수 검증 완화). api-spec·schema.md·schema.sql·vuerd 반영, Q-007 잔여 = type 전달 경로·값 체계·service 원천. ⚠️ 노션 쪽 낡은 곳(raw `{}`·`trigger.services[0]` 잔재·쟁점 3·§5.1 파생 문구) 동기화 필요
+- 10:53 **"분석 중(OPEN/ANALYZING) 행 노출 = 확장 범위" 명시** — MVP는 DONE만 노출(v0.2.1)이라 severity·summary null 케이스 자체가 없음(현행 정합 이상 무). api-spec §2 목록 노트에 확장 범위 표기 + MVP-정의서 §11 확장 백로그 7번 신설(도입 시 null 계약·status 재노출 필요)
+- 10:30 **/ingest trigger 2키 축소 + raw string 확정 반영 (D-021)** — trigger: `ts`→`timestamp` 개명, `signal` 제거, `services`→`modality` 개명(값 = 감지 모달리티 `log`/`metric`/`trace`, 서비스명 배제 — D-020 정답 유출 방지 확장). 자식 3종 `raw` JSON→TEXT(행당 원본 한 줄, RCA 분석은 FastAPI가 수신 번들로 수행·DB 미경유). api-spec **v0.3**(§2·3.1·4.2·5.1·쟁점 3), schema.md(ERD·골격 표·엔티티 String raw·T4), schema.sql, vuerd 4곳 동기 반영. ⚠️ **목록 `type`·`service` 원천 재확정 필요 → Q-007 등록** (trigger 파생 불가 — 후보: severity처럼 LLM 산출을 PATCH DONE에 포함). 유형(type) 확장 시 enum 아닌 유형 테이블 방침만 합의(지금 미도입)
+- 10:30 WORKLOG 7/7 섹션 → `WORKLOG-ARCHIVE.md` 이동 (아카이브 규칙)
+
 ## 2026-07-07 (월)
 
 - 17:26 **docs 커밋 + 노션 동기화로 마감** — chokchok 커밋 2건(`40e9b94` A안·internal API·인덱스 기준·구조 재배치, `5cc6151` ERD 추가). 노션 🧩 DB 스키마 설계서를 테이블 구조(ERD+DDL) 우선 순서로 전체 교체(부록 A/B 유지), 🔌 API 명세서도 A안 확정본으로 동기화(§5 internal API 2종, 체크리스트 저장주체 [x]). 로컬 docs = git = 노션 3곳 일치 상태로 퇴근

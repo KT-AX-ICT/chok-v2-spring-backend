@@ -17,14 +17,6 @@
 - 10:35 **JPA 엔티티 4종 + 레포지토리 (슬라이스 1.5 착수)** — report(JSON `trigger_info`·`result` 패스스루) + log/metric/trace(공통 골격 `@MappedSuperclass SignalRow`로 중복 제거). `ddl-auto=validate`로 schema.sql과 1:1 정합 확인 — 엔티티 없어 무검증이던 validate가 실검증으로 전환. 커밋 `52b62ee`
 - 10:00 **MySQL 연결·Docker 배포 구성** — H2 제거 MySQL 단일화, application.yaml datasource+`ddl-auto=validate`, Dockerfile(멀티스테이지·non-root)+compose(mysql:8.4·schema.sql init·healthcheck·127.0.0.1 바인딩), `.env` 시크릿 분리. compose up 후 4테이블 생성·앱↔DB 연결 확인. 커밋 `6459bcb`·`f805781`
 
-## 2026-07-10 (금)
-
-- 11:20 **노션 🔌 API 명세서 페이지를 로컬 정본(7/10 개정)으로 전체 교체** — D-021·D-022 반영본으로 동기화(본문 replace + 비고 속성 갱신). 7/7 전례(부분 치환 이스케이프 실패)에 따라 전체 교체 방식. §4.1에 status 파라미터 불채택 명시 블록 추가. ⚠️ 기존 페이지의 인라인 discussion(§1.2·"분석 중"·§3.1·§4.2 4건)은 본문 교체로 앵커가 떨어졌을 수 있음 — 확인 필요. 로컬 docs = 노션 일치 상태
-- 11:09 **노션 API 명세서(진행중 페이지) ↔ 로컬 대조 후 항목별 채택 확정 (D-022)** — 노션안 채택: `ts`→`timestamp` 전면 개명(DB 컬럼 `ts` 유지)·`window` `start/end`(`windowStart/End`)·목록 `type`=LLM 판정·후순위 `POST/GET /ingest/{id}`. 로컬안 채택: raw string(D-021)·`status` 쿼리 파라미터 불채택·쟁점 3 재작성·버전 라벨은 노션 기준 v0.2.1 유지(확정은 명일 회의). 추가 결정: **결과 PATCH 전부 DONE 처리**(ANALYZING·FAILED 후순위), severity 컬럼·계약만 신설(필수 검증 완화). api-spec·schema.md·schema.sql·vuerd 반영, Q-007 잔여 = type 전달 경로·값 체계·service 원천. ⚠️ 노션 쪽 낡은 곳(raw `{}`·`trigger.services[0]` 잔재·쟁점 3·§5.1 파생 문구) 동기화 필요
-- 10:53 **"분석 중(OPEN/ANALYZING) 행 노출 = 확장 범위" 명시** — MVP는 DONE만 노출(v0.2.1)이라 severity·summary null 케이스 자체가 없음(현행 정합 이상 무). api-spec §2 목록 노트에 확장 범위 표기 + MVP-정의서 §11 확장 백로그 7번 신설(도입 시 null 계약·status 재노출 필요)
-- 10:30 **/ingest trigger 2키 축소 + raw string 확정 반영 (D-021)** — trigger: `ts`→`timestamp` 개명, `signal` 제거, `services`→`modality` 개명(값 = 감지 모달리티 `log`/`metric`/`trace`, 서비스명 배제 — D-020 정답 유출 방지 확장). 자식 3종 `raw` JSON→TEXT(행당 원본 한 줄, RCA 분석은 FastAPI가 수신 번들로 수행·DB 미경유). api-spec **v0.3**(§2·3.1·4.2·5.1·쟁점 3), schema.md(ERD·골격 표·엔티티 String raw·T4), schema.sql, vuerd 4곳 동기 반영. ⚠️ **목록 `type`·`service` 원천 재확정 필요 → Q-007 등록** (trigger 파생 불가 — 후보: severity처럼 LLM 산출을 PATCH DONE에 포함). 유형(type) 확장 시 enum 아닌 유형 테이블 방침만 합의(지금 미도입)
-- 10:30 WORKLOG 7/7 섹션 → `WORKLOG-ARCHIVE.md` 이동 (아카이브 규칙)
-
 ## 백로그 / 미해결
 
 **7/8 마감 (7/7 회의 액션, 본인 담당)**
