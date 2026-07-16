@@ -5,6 +5,7 @@
 
 ## 2026-07-16 (목)
 
+- 11:35 **코드리뷰 지적 6건 검증·대응 (SVC-01/02)** — 외부 리뷰 6건을 스키마/코드로 검증(맹종 아님): 전부 유효하나 reviewer의 dedup "길이초과" 예시는 try/catch 범위(report 저장) 밖·`service` null은 이미 처리됨을 확인. 수정 5건 → ① 저장 body `null` 500→422 ② signal 배열 null항목·`raw` 누락(NOT NULL) 저장 전 422 ③ dedup catch를 trigger_time 재조회 확인 시에만 409, 아니면 원 예외 재전파(오분류 방지) ④ 검색어 LIKE 메타문자 escape ⑤ todayCount 자정 경계(now 2회 읽기→단일 `todayRangeUtc`). #6(테스트)는 순수 유닛만 채택 → Timestamps/KstDates/ReportSpecs 3종(무-DB, 무-의존성 추가). 실배포 회귀 5/5 + 유닛 통과. 커밋 `85b4350`(fix)·`bb7669f`(test)
 - 11:19 **조회 API 버그픽스 2건 (SVC-02 후속) + Docker E2E 재검증** — 어제 조회 API 리뷰 중 발견한 2건 처리. ① 조회 파라미터 파싱 실패가 **500** 나던 것 → `GlobalExceptionHandler`에 `MethodArgumentTypeMismatchException`(`{id}` 타입)·`DateTimeParseException`(`from`/`to` 날짜) 추가해 저장 경로와 동일한 **422 `INVALID_PAYLOAD`** 봉투로 통일(해피패스만 검증돼 사각지대였던 실패경로). ② 날짜 필터·todayCount 축을 `createdAt`(저장 시각)→`triggerTime`(=detectedAt, 장애 발생 시각)으로 정정 — 정렬 화이트리스트(detectedAt 제공)와 필터축 불일치 해소. 실배포 8080 검증: `?from=oops`·`/reports/abc` 422, seed(trigger_time 7/10·created_at 7/16)로 `from/to=7/10` 1건·`7/16` 0건 = 축 detectedAt 확정, 앱 clean 부팅으로 파생 쿼리 메서드명 검증. 커밋 `e29f55b`
 
 ## 2026-07-15 (화)
