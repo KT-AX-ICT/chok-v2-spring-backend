@@ -25,17 +25,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ReportIngestService {
 
+    private static final int SERVICE_MAX = 128;  // schema: service VARCHAR(128)
+
     private final ReportRepository reports;
     private final LogRepository logs;
     private final MetricRepository metrics;
     private final TraceRepository traces;
+    private final TriggerDedupLookup dedup;
 
     public ReportIngestService(ReportRepository reports, LogRepository logs,
-                               MetricRepository metrics, TraceRepository traces) {
+                               MetricRepository metrics, TraceRepository traces,
+                               TriggerDedupLookup dedup) {
         this.reports = reports;
         this.logs = logs;
         this.metrics = metrics;
         this.traces = traces;
+        this.dedup = dedup;
     }
 
     @Transactional
@@ -65,9 +70,9 @@ public class ReportIngestService {
             reports.saveAndFlush(report);                   // id 확보 + UNIQUE(trigger_time) 발화
         } catch (DataIntegrityViolationException race) {
             // 동시 삽입 레이스 — trigger_time UNIQUE가 최종 방어선 (api-spec §5.1).
-            // 실제로 그 행이 생겼을 때만 409로. 아니면 원인 감추지 말고 그대로 올림(다른 제약 위반 오분류 방지).
-            // ponytail: report의 UNIQUE는 trigger_time 하나뿐이라 재조회로 판별 충분. 제약 늘면 재검토.
-            Long existing = reports.findByTriggerTime(triggerTime).map(Report::getId).orElse(null);
+            // 실패한 트랜잭션은 rollback-only라 여기서 재조회하면 안 됨 → 별도 트랜잭션(REQUIRES_NEW)으로 확인.
+            // 그 행이 실제로 있을 때만 409, 아니면 원인 감추지 말고 원 예외 재전파(다른 제약 위반 오분류 방지).
+            Long existing = dedup.findExistingId(triggerTime).orElse(null);
             if (existing == null) {
                 throw race;
             }
@@ -85,15 +90,15 @@ public class ReportIngestService {
         if (req == null) {
             throw new InvalidPayloadException("request body is required");
         }
-        if (req.status() == null || req.status().isBlank()) {
-            throw new InvalidPayloadException("status is required");
+        // MVP는 DONE만 저장 (api-spec v0.2.1) — 조회는 DONE만 노출하므로 다른 status는 유령 리포트가 됨.
+        if (!"DONE".equals(req.status())) {
+            throw new InvalidPayloadException("status must be DONE (MVP)");
         }
         if (req.triggerInfo() == null || req.triggerInfo().get("trigger_time") == null) {
             throw new InvalidPayloadException("trigger_info.trigger_time is required");
         }
-        // MVP는 DONE만 저장 — DONE이면 result 필수 (api-spec §5.1)
-        if ("DONE".equals(req.status()) && req.result() == null) {
-            throw new InvalidPayloadException("result is required when status is DONE");
+        if (req.result() == null) {
+            throw new InvalidPayloadException("result is required");
         }
     }
 
@@ -109,6 +114,9 @@ public class ReportIngestService {
             }
             if (it.raw() == null) {                                    // raw NOT NULL (schema) → 사전 422
                 throw new InvalidPayloadException("signal raw is required");
+            }
+            if (it.service() != null && it.service().length() > SERVICE_MAX) {  // VARCHAR(128) 초과 → 사전 422
+                throw new InvalidPayloadException("service는 " + SERVICE_MAX + "자 이하여야 합니다");
             }
             T row = factory.get();
             row.setReport(report);
