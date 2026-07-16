@@ -79,8 +79,9 @@ public class ReportQueryService {
     public DashboardResponse dashboard() {
         long total = reports.countByStatus(DONE);
         long high = reports.countByStatusAndSeverity(DONE, "HIGH");
+        KstDates.UtcRange todayKst = KstDates.todayRangeUtc();
         long today = reports.countByStatusAndTriggerTimeGreaterThanEqualAndTriggerTimeLessThan(
-                DONE, KstDates.todayStartUtc(), KstDates.tomorrowStartUtc());
+                DONE, todayKst.from(), todayKst.to());
         List<ReportListItem> recent = reports.findTop5ByStatusOrderByCreatedAtDesc(DONE)
                 .stream().map(this::toListItem).toList();
         return new DashboardResponse(new DashboardResponse.Summary(total, high, today), recent);

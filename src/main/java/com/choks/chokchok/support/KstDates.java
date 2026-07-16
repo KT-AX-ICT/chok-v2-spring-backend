@@ -20,13 +20,12 @@ public final class KstDates {
         return kstDate.atStartOfDay(KST).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
     }
 
-    /** 오늘(KST)의 시작 — [today, tomorrow) 하한. */
-    public static LocalDateTime todayStartUtc() {
-        return startOfDayUtc(LocalDate.now(KST));
-    }
+    /** UTC 반열림 구간 [from, to). */
+    public record UtcRange(LocalDateTime from, LocalDateTime to) {}
 
-    /** 오늘(KST)의 끝 — [today, tomorrow) 상한(배타). */
-    public static LocalDateTime tomorrowStartUtc() {
-        return startOfDayUtc(LocalDate.now(KST).plusDays(1));
+    /** 오늘(KST) [start, next) 구간을 UTC로. now()를 한 번만 읽어 자정 경계에서 범위가 벌어지지 않게. */
+    public static UtcRange todayRangeUtc() {
+        LocalDate today = LocalDate.now(KST);
+        return new UtcRange(startOfDayUtc(today), startOfDayUtc(today.plusDays(1)));
     }
 }

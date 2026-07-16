@@ -28,9 +28,15 @@ final class ReportSpecs {
 
     /** summary(=result.summary.highlight) LIKE — JSON 경로 추출 (7/14 D-023: title 제거로 summary 단독). */
     static Specification<Report> summaryLike(String search) {
+        String pattern = "%" + escapeLike(search) + "%";
         return (root, q, cb) -> cb.like(
                 cb.function("json_value", String.class, root.get("result"),
                         cb.literal("$.summary.highlight")),
-                "%" + search + "%");
+                pattern, '\\');
+    }
+
+    /** LIKE 메타문자(\ % _)를 escape → 문자 그대로 매칭 (ESCAPE '\'). backslash를 먼저 치환. */
+    static String escapeLike(String s) {
+        return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 }

@@ -64,8 +64,13 @@ public class ReportIngestService {
         try {
             reports.saveAndFlush(report);                   // id 확보 + UNIQUE(trigger_time) 발화
         } catch (DataIntegrityViolationException race) {
-            // 동시 삽입 레이스 — UNIQUE가 최종 방어선 (api-spec §5.1)
+            // 동시 삽입 레이스 — trigger_time UNIQUE가 최종 방어선 (api-spec §5.1).
+            // 실제로 그 행이 생겼을 때만 409로. 아니면 원인 감추지 말고 그대로 올림(다른 제약 위반 오분류 방지).
+            // ponytail: report의 UNIQUE는 trigger_time 하나뿐이라 재조회로 판별 충분. 제약 늘면 재검토.
             Long existing = reports.findByTriggerTime(triggerTime).map(Report::getId).orElse(null);
+            if (existing == null) {
+                throw race;
+            }
             throw new DuplicateTriggerException(existing);
         }
 
@@ -77,6 +82,9 @@ public class ReportIngestService {
     }
 
     private void validate(IngestRequest req) {
+        if (req == null) {
+            throw new InvalidPayloadException("request body is required");
+        }
         if (req.status() == null || req.status().isBlank()) {
             throw new InvalidPayloadException("status is required");
         }
@@ -96,9 +104,15 @@ public class ReportIngestService {
         }
         List<T> rows = new ArrayList<>(items.size());
         for (SignalItem it : items) {
+            if (it == null) {
+                throw new InvalidPayloadException("signal 항목이 null입니다");
+            }
+            if (it.raw() == null) {                                    // raw NOT NULL (schema) → 사전 422
+                throw new InvalidPayloadException("signal raw is required");
+            }
             T row = factory.get();
             row.setReport(report);
-            row.setTs(Timestamps.parseUtc(it.timestamp()));
+            row.setTs(Timestamps.parseUtc(it.timestamp()));            // null/형식오류 → InvalidPayloadException(422)
             row.setService(it.service() == null ? "" : it.service());  // 서비스 죽으면 빈 string (api-spec §2)
             row.setRaw(it.raw());
             rows.add(row);
