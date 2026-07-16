@@ -3,6 +3,7 @@ package com.choks.chokchok.web;
 import com.choks.chokchok.service.DuplicateTriggerException;
 import com.choks.chokchok.service.InvalidPayloadException;
 import com.choks.chokchok.service.ReportNotFoundException;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /** 전 API 공통 에러 봉투: {"error": {"code": "...", "message": "..."}} (api-spec §4). */
 @RestControllerAdvice
@@ -30,9 +32,20 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", errorBody("REPORT_NOT_FOUND", e.getMessage())));
     }
 
-    @ExceptionHandler({InvalidPayloadException.class, HttpMessageNotReadableException.class})
+    // 저장 본문(422)뿐 아니라 조회 파라미터(from/to 날짜·{id} 타입) 파싱 실패도 같은 봉투로 — 500 방지.
+    @ExceptionHandler({InvalidPayloadException.class, HttpMessageNotReadableException.class,
+            MethodArgumentTypeMismatchException.class, DateTimeParseException.class})
     public ResponseEntity<Map<String, Object>> invalid(Exception e) {
-        String msg = (e instanceof InvalidPayloadException) ? e.getMessage() : "요청 본문을 파싱할 수 없습니다";
+        String msg;
+        if (e instanceof InvalidPayloadException) {
+            msg = e.getMessage();
+        } else if (e instanceof MethodArgumentTypeMismatchException mism) {
+            msg = "잘못된 파라미터: " + mism.getName();
+        } else if (e instanceof DateTimeParseException dtp) {
+            msg = "잘못된 날짜 형식: " + dtp.getParsedString();
+        } else {
+            msg = "요청 본문을 파싱할 수 없습니다";
+        }
         return ResponseEntity.unprocessableEntity()
                 .body(Map.of("error", errorBody("INVALID_PAYLOAD", msg)));
     }

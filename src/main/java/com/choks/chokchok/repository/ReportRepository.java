@@ -21,7 +21,8 @@ public interface ReportRepository
 
     long countByStatusAndSeverity(String status, String severity);
 
-    long countByStatusAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+    /** todayCount — 오늘(KST) 발생(detectedAt=trigger_time) 기준. */
+    long countByStatusAndTriggerTimeGreaterThanEqualAndTriggerTimeLessThan(
             String status, LocalDateTime fromInclusive, LocalDateTime toExclusive);
 
     /** 대시보드 최근 5건 (createdAt desc). */

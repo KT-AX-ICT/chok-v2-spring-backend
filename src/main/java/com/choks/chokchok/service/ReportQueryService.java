@@ -51,10 +51,10 @@ public class ReportQueryService {
             spec = spec.and(ReportSpecs.severity(severity));
         }
         if (hasText(from)) {
-            spec = spec.and(ReportSpecs.createdFrom(KstDates.startOfDayUtc(LocalDate.parse(from))));
+            spec = spec.and(ReportSpecs.detectedFrom(KstDates.startOfDayUtc(LocalDate.parse(from))));
         }
         if (hasText(to)) {
-            spec = spec.and(ReportSpecs.createdBefore(KstDates.startOfDayUtc(LocalDate.parse(to).plusDays(1))));
+            spec = spec.and(ReportSpecs.detectedBefore(KstDates.startOfDayUtc(LocalDate.parse(to).plusDays(1))));
         }
         if (hasText(search)) {
             spec = spec.and(ReportSpecs.summaryLike(search));
@@ -79,7 +79,7 @@ public class ReportQueryService {
     public DashboardResponse dashboard() {
         long total = reports.countByStatus(DONE);
         long high = reports.countByStatusAndSeverity(DONE, "HIGH");
-        long today = reports.countByStatusAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+        long today = reports.countByStatusAndTriggerTimeGreaterThanEqualAndTriggerTimeLessThan(
                 DONE, KstDates.todayStartUtc(), KstDates.tomorrowStartUtc());
         List<ReportListItem> recent = reports.findTop5ByStatusOrderByCreatedAtDesc(DONE)
                 .stream().map(this::toListItem).toList();

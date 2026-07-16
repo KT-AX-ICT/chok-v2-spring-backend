@@ -17,12 +17,13 @@ final class ReportSpecs {
         return (root, q, cb) -> cb.equal(root.get("severity"), severity);
     }
 
-    static Specification<Report> createdFrom(LocalDateTime fromInclusiveUtc) {
-        return (root, q, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), fromInclusiveUtc);
+    // 날짜 필터 축 = detectedAt(=trigger_time, 장애 발생 시각). 저장 시각(createdAt) 아님.
+    static Specification<Report> detectedFrom(LocalDateTime fromInclusiveUtc) {
+        return (root, q, cb) -> cb.greaterThanOrEqualTo(root.get("triggerTime"), fromInclusiveUtc);
     }
 
-    static Specification<Report> createdBefore(LocalDateTime toExclusiveUtc) {
-        return (root, q, cb) -> cb.lessThan(root.get("createdAt"), toExclusiveUtc);
+    static Specification<Report> detectedBefore(LocalDateTime toExclusiveUtc) {
+        return (root, q, cb) -> cb.lessThan(root.get("triggerTime"), toExclusiveUtc);
     }
 
     /** summary(=result.summary.highlight) LIKE — JSON 경로 추출 (7/14 D-023: title 제거로 summary 단독). */
