@@ -48,7 +48,7 @@ public class ReportIngestService {
         validate(req);
 
         LocalDateTime triggerTime =
-                Timestamps.parseUtc(req.triggerInfo().get("trigger_time").asString());
+                Timestamps.parseUtc(req.triggerInfo().get("triggerTime").asString());
 
         // 멱등: 선(先)체크로 흔한 재전송을 빠르게 걸러냄
         reports.findByTriggerTime(triggerTime).ifPresent(r -> {
@@ -94,8 +94,8 @@ public class ReportIngestService {
         if (!"DONE".equals(req.status())) {
             throw new InvalidPayloadException("status must be DONE (MVP)");
         }
-        if (req.triggerInfo() == null || req.triggerInfo().get("trigger_time") == null) {
-            throw new InvalidPayloadException("trigger_info.trigger_time is required");
+        if (req.triggerInfo() == null || req.triggerInfo().get("triggerTime") == null) {
+            throw new InvalidPayloadException("triggerInfo.triggerTime is required");
         }
         if (req.result() == null) {
             throw new InvalidPayloadException("result is required");

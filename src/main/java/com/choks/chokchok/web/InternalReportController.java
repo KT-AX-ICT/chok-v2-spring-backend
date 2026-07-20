@@ -23,6 +23,6 @@ public class InternalReportController {
     @PostMapping
     public ResponseEntity<Map<String, Object>> create(@RequestBody IngestRequest req) {
         Long reportId = service.save(req);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("report_id", reportId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("reportId", reportId));
     }
 }

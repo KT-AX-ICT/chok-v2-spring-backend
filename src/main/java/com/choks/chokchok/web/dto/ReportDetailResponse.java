@@ -1,6 +1,5 @@
 package com.choks.chokchok.web.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import tools.jackson.databind.JsonNode;
 
 /** 상세 봉투 {report, counts, detail} (api-spec §4.2). */
@@ -9,7 +8,7 @@ public record ReportDetailResponse(
         Counts counts,
         JsonNode detail
 ) {
-    /** 목록 아이템 + windowStart/End + trigger_info. */
+    /** 목록 아이템 + windowStart/End + triggerInfo (전 응답 camelCase 통일). */
     public record ReportView(
             Long id,
             String type,
@@ -20,7 +19,7 @@ public record ReportDetailResponse(
             String createdAt,
             String windowStart,
             String windowEnd,
-            @JsonProperty("trigger_info") JsonNode triggerInfo
+            JsonNode triggerInfo
     ) {}
 
     public record Counts(long logs, long metrics, long traces) {}
