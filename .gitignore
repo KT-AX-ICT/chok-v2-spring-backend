@@ -39,7 +39,7 @@ out/
 ### bkit (local tooling state) ###
 .bkit/
 
-docs/Dataset/
+docs/
 
 ### secrets ###
 .env
