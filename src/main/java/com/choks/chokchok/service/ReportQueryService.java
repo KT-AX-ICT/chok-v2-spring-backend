@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,6 +108,12 @@ public class ReportQueryService {
         for (Sort.Order o : pageable.getSort()) {
             if (!SORT_WHITELIST.contains(o.getProperty())) {
                 continue;
+            }
+            if ("severity".equals(o.getProperty())) {
+                // 심각도 랭크 정렬 — VARCHAR 알파벳(H<L<M) 대신 CASE로 HIGH→MID→LOW. 미지값은 맨 뒤(3).
+                Sort rank = JpaSort.unsafe(o.getDirection(),
+                        "(CASE WHEN severity = 'HIGH' THEN 0 WHEN severity = 'MID' THEN 1 WHEN severity = 'LOW' THEN 2 ELSE 3 END)");
+                return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), rank);
             }
             String prop = "detectedAt".equals(o.getProperty()) ? "triggerTime" : o.getProperty();
             orders.add(new Sort.Order(o.getDirection(), prop));
