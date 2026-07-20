@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ReportIngestService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReportIngestService.class);
     private static final int SERVICE_MAX = 128;  // schema: service VARCHAR(128)
 
     private final ReportRepository reports;
@@ -77,28 +81,40 @@ public class ReportIngestService {
                 throw race;
             }
             throw new DuplicateTriggerException(existing);
+        } catch (DataAccessException dbErr) {
+            // Case 2 — DB 저장 실패(중복 외). DB에 상태를 못 남기므로 로그+재throw(→500, FastAPI 재시도).
+            log.error("report save failed (DB): triggerTime={}", triggerTime, dbErr);
+            throw dbErr;
         }
 
         saveSignals(req.logs(), report, Log::new, logs);
         saveSignals(req.metrics(), report, Metric::new, metrics);
         saveSignals(req.traces(), report, Trace::new, traces);
 
+        // Case 1 — 에이전트 분석 실패 리포트. 저장은 하되 로그로 사유를 남긴다(reason은 DB 미저장).
+        if ("FAILED".equals(req.status())) {
+            log.warn("report stored as FAILED: reportId={}, triggerTime={}, reason={}",
+                    report.getId(), triggerTime, req.reason());
+        }
+
         return report.getId();
     }
 
-    private void validate(IngestRequest req) {
+    // 순수 검증 — DB 접근 전에 던진다. 유닛 테스트가 직접 호출(package-private).
+    void validate(IngestRequest req) {
         if (req == null) {
             throw new InvalidPayloadException("request body is required");
         }
-        // MVP는 DONE만 저장 (api-spec v0.2.1) — 조회는 DONE만 노출하므로 다른 status는 유령 리포트가 됨.
-        if (!"DONE".equals(req.status())) {
-            throw new InvalidPayloadException("status must be DONE (MVP)");
+        // MVP 저장 상태는 DONE(분석 완료) 또는 FAILED(에이전트 분석 실패). 그 외는 유령 리포트라 거부.
+        if (!"DONE".equals(req.status()) && !"FAILED".equals(req.status())) {
+            throw new InvalidPayloadException("status must be DONE or FAILED");
         }
         if (req.triggerInfo() == null || req.triggerInfo().get("triggerTime") == null) {
             throw new InvalidPayloadException("triggerInfo.triggerTime is required");
         }
-        if (req.result() == null) {
-            throw new InvalidPayloadException("result is required");
+        // result는 DONE일 때만 필수 — FAILED는 분석 결과가 없으므로 면제.
+        if ("DONE".equals(req.status()) && req.result() == null) {
+            throw new InvalidPayloadException("result is required when status is DONE");
         }
     }
 
