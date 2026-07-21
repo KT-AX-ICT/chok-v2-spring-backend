@@ -1,4 +1,4 @@
--- RCA 저장 스키마 (MySQL 8.4.9 LTS)
+-- V1 baseline — RCA 저장 스키마 초기 생성 (Flyway). MySQL 8.4.9 LTS
 -- report(부모) 1 : N log / metric / trace
 -- 3종 공통 골격: { report_id, ts, service, raw }
 --   ts      = 정규화된 타임스탬프, UTC 고정 (로그 원본이 µs 정밀도라 DATETIME(3)로 ms 보존)
@@ -7,9 +7,8 @@
 --   raw     = 원본 그대로 (무파싱 TEXT — 행당 원본 한 줄, RCA 분석은 DB를 재조회하지 않음. D-021)
 
 -- DDL 소유: Spring(chokchok) 단독. FastAPI는 DB에 직접 접근하지 않고 Spring 내부 API를 호출한다 (A안, 7/7 확정).
--- 이 파일이 스키마 단일 소스(SSOT). 로컬은 docker-compose가, 테스트는 Testcontainers가, 운영은 deploy repo가 mysql init 경로로 mount해 사용한다.
---   → deploy repo는 이 파일을 손으로 복사하지 말고 CI/submodule로 이 원본을 가져갈 것 (사본 이중관리 시 drift).
---   → init 경로 스크립트는 최초 볼륨 init 1회만 실행됨. 스키마 변경은 여기 반영 + 운영 DB에 수동 ALTER 동반 필수 (엔티티↔DB가 validate로 lockstep).
+-- 스키마 SSOT = Flyway 마이그레이션(이 디렉터리). 앱 부팅 시 자동 적용되고 ddl-auto:validate가 엔티티↔테이블 정합을 검증한다.
+--   → 적용 완료된 V1은 절대 수정 금지(체크섬 깨짐). 스키마 변경은 V2__*.sql 새 파일로 추가.
 -- 인덱스 기준: 실제 쿼리 경로에만 건다 — 모든 자식 조회는 report_id 경유, 시간 필터는 report 내부에서만.
 
 CREATE TABLE report (
