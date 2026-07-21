@@ -26,13 +26,18 @@ final class ReportSpecs {
         return (root, q, cb) -> cb.lessThan(root.get("triggerTime"), toExclusiveUtc);
     }
 
-    /** summary(=result.summary.highlight) LIKE — JSON 경로 추출 (7/14 D-023: title 제거로 summary 단독). */
-    static Specification<Report> summaryLike(String search) {
+    /** 통합 검색 — result.summary.highlight 또는 result.service LIKE (D-024: report에 service 컬럼 없어 JSON 파생). */
+    static Specification<Report> searchLike(String search) {
         String pattern = "%" + escapeLike(search) + "%";
-        return (root, q, cb) -> cb.like(
-                cb.function("json_value", String.class, root.get("result"),
-                        cb.literal("$.summary.highlight")),
-                pattern, '\\');
+        return (root, q, cb) -> cb.or(
+                cb.like(jsonValue(cb, root, "$.summary.highlight"), pattern, '\\'),
+                cb.like(jsonValue(cb, root, "$.service"), pattern, '\\'));
+    }
+
+    private static jakarta.persistence.criteria.Expression<String> jsonValue(
+            jakarta.persistence.criteria.CriteriaBuilder cb,
+            jakarta.persistence.criteria.Root<Report> root, String path) {
+        return cb.function("json_value", String.class, root.get("result"), cb.literal(path));
     }
 
     /** LIKE 메타문자(\ % _)를 escape → 문자 그대로 매칭 (ESCAPE '\'). backslash를 먼저 치환. */

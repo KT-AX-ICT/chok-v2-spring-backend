@@ -64,7 +64,7 @@ public class ReportQueryService {
             spec = spec.and(ReportSpecs.detectedBefore(KstDates.startOfDayUtc(LocalDate.parse(to).plusDays(1))));
         }
         if (hasText(search)) {
-            spec = spec.and(ReportSpecs.summaryLike(search));
+            spec = spec.and(ReportSpecs.searchLike(search));
         }
         return reports.findAll(spec, sanitizeSort(pageable)).map(this::toListItem);
     }
