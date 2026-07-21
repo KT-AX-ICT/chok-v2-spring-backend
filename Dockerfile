@@ -4,8 +4,8 @@ WORKDIR /app
 COPY gradlew settings.gradle build.gradle ./
 COPY gradle ./gradle
 COPY src ./src
-# ponytail: Windows 체크아웃이면 gradlew에 CR이 붙어 shebang이 깨짐 → 방어적으로 제거
-RUN sed -i 's/\r$//' gradlew && chmod +x gradlew && ./gradlew bootJar --no-daemon
+# Git 실행 권한 누락에 대비해 빌드 단계에서도 실행 권한을 보장한다.
+RUN chmod +x gradlew && ./gradlew bootJar --no-daemon
 
 # --- run ---
 FROM eclipse-temurin:21-jre
