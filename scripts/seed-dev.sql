@@ -7,15 +7,17 @@
 --
 -- 모든 계정 비밀번호: chokchok1!  (BCrypt, Spring Security BCryptPasswordEncoder 호환 $2y)
 
--- 회사 = 모니터링 대상 벤치마크 시스템(AnoMod 데이터셋). company_code는 ingest로 들어오는 값(SN001 형태),
--- company_name은 코드의 알파벳 접두사(SN001→SN, TT001→TT). TT는 report 데이터 도착 전 회사 행만 선반영.
+-- 회사: SN001·TT001 = 모니터링 대상 벤치마크 시스템(AnoMod, company_name은 코드 접두사 SN001→SN·TT001→TT).
+--       CHOK = 운영사(chokchok 자체) — 어드민 소속. company_code는 ingest로 들어오는 값 형태.
+-- TT는 report 데이터 도착 전 회사 행만 선반영.
 INSERT IGNORE INTO company (company_code, company_name) VALUES
   ('SN001', 'SN'),
-  ('TT001', 'TT');
+  ('TT001', 'TT'),
+  ('CHOK',  'CHOK');
 
 INSERT IGNORE INTO users (company_id, email, password_hash, name, role)
 SELECT c.id, 'admin@chokchok.dev', '$2y$10$/6gOzp6NHrnJ5bDiIRhhUuz0Kfg3ggLclsBAOQHohlHDIbVY6zAn.', '관리자', 'ADMIN'
-FROM company c WHERE c.company_code = 'SN001';
+FROM company c WHERE c.company_code = 'CHOK';
 
 INSERT IGNORE INTO users (company_id, email, password_hash, name, role)
 SELECT c.id, 'sn.user@chokchok.dev', '$2y$10$/6gOzp6NHrnJ5bDiIRhhUuz0Kfg3ggLclsBAOQHohlHDIbVY6zAn.', 'SN 사용자', 'USER'
