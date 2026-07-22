@@ -7,22 +7,23 @@
 --
 -- 모든 계정 비밀번호: chokchok1!  (BCrypt, Spring Security BCryptPasswordEncoder 호환 $2y)
 
+-- 회사 = 모니터링 대상 벤치마크 시스템(AnoMod 데이터셋). company_code는 ingest로 들어오는 값(SN001 형태),
+-- company_name은 코드의 알파벳 접두사(SN001→SN, TT001→TT). TT는 report 데이터 도착 전 회사 행만 선반영.
 INSERT IGNORE INTO company (company_code, company_name) VALUES
-  ('KT001',  'KT'),
-  ('CHOK01', '촉촉컴퍼니'),
-  ('SN001',  'SocialNetwork');
+  ('SN001', 'SN'),
+  ('TT001', 'TT');
 
 INSERT IGNORE INTO users (company_id, email, password_hash, name, role)
 SELECT c.id, 'admin@chokchok.dev', '$2y$10$/6gOzp6NHrnJ5bDiIRhhUuz0Kfg3ggLclsBAOQHohlHDIbVY6zAn.', '관리자', 'ADMIN'
-FROM company c WHERE c.company_code = 'KT001';
+FROM company c WHERE c.company_code = 'SN001';
 
 INSERT IGNORE INTO users (company_id, email, password_hash, name, role)
-SELECT c.id, 'user1@chokchok.dev', '$2y$10$/6gOzp6NHrnJ5bDiIRhhUuz0Kfg3ggLclsBAOQHohlHDIbVY6zAn.', '김촉촉', 'USER'
-FROM company c WHERE c.company_code = 'KT001';
+SELECT c.id, 'sn.user@chokchok.dev', '$2y$10$/6gOzp6NHrnJ5bDiIRhhUuz0Kfg3ggLclsBAOQHohlHDIbVY6zAn.', 'SN 사용자', 'USER'
+FROM company c WHERE c.company_code = 'SN001';
 
 INSERT IGNORE INTO users (company_id, email, password_hash, name, role)
-SELECT c.id, 'user2@chokchok.dev', '$2y$10$/6gOzp6NHrnJ5bDiIRhhUuz0Kfg3ggLclsBAOQHohlHDIbVY6zAn.', '박촉촉', 'USER'
-FROM company c WHERE c.company_code = 'CHOK01';
+SELECT c.id, 'tt.user@chokchok.dev', '$2y$10$/6gOzp6NHrnJ5bDiIRhhUuz0Kfg3ggLclsBAOQHohlHDIbVY6zAn.', 'TT 사용자', 'USER'
+FROM company c WHERE c.company_code = 'TT001';
 
 -- 결과 확인
 SELECT c.company_code, c.company_name, u.email, u.name, u.role
