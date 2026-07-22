@@ -12,7 +12,6 @@ import com.choks.chokchok.web.dto.DashboardResponse;
 import com.choks.chokchok.web.dto.ReportDetailResponse;
 import com.choks.chokchok.web.dto.ReportListItem;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.springframework.data.domain.Page;
@@ -157,7 +156,7 @@ public class ReportQueryService {
 
     /** 화이트리스트 밖 정렬 필드는 버리고, detectedAt→triggerTime 매핑. 비면 createdAt desc 기본. */
     private Pageable sanitizeSort(Pageable pageable) {
-        List<Sort.Order> orders = new ArrayList<>();
+        Sort sort = Sort.unsorted();
         for (Sort.Order o : pageable.getSort()) {
             if (!SORT_WHITELIST.contains(o.getProperty())) {
                 continue;
@@ -166,12 +165,17 @@ public class ReportQueryService {
                 // 심각도 랭크 정렬 — VARCHAR 알파벳(H<L<M) 대신 CASE로 HIGH→MID→LOW. 미지값은 맨 뒤(3).
                 Sort rank = JpaSort.unsafe(o.getDirection(),
                         "(CASE WHEN severity = 'HIGH' THEN 0 WHEN severity = 'MID' THEN 1 WHEN severity = 'LOW' THEN 2 ELSE 3 END)");
-                return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), rank);
+                sort = sort.and(rank);
+                continue;
             }
             String prop = "detectedAt".equals(o.getProperty()) ? "triggerTime" : o.getProperty();
-            orders.add(new Sort.Order(o.getDirection(), prop));
+            sort = sort.and(Sort.by(new Sort.Order(o.getDirection(), prop)));
         }
-        Sort sort = orders.isEmpty() ? Sort.by(Sort.Direction.DESC, "createdAt") : Sort.by(orders);
+        if (sort.isUnsorted()) {
+            sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        }
+        // 같은 millisecond에 생성된 행도 페이지 사이에서 순서가 바뀌지 않도록 고유 키로 마무리한다.
+        sort = sort.and(Sort.by(Sort.Direction.DESC, "id"));
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
     }
 
