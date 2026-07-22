@@ -13,6 +13,7 @@ import com.choks.chokchok.web.dto.ReportDetailResponse;
 import com.choks.chokchok.web.dto.ReportListItem;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,14 +41,23 @@ public class ReportQueryService {
     private final MetricRepository metrics;
     private final TraceRepository traces;
     private final ObjectMapper mapper;
+    private final CompanyScopeResolver scope;
 
     public ReportQueryService(ReportRepository reports, LogRepository logs,
-                              MetricRepository metrics, TraceRepository traces, ObjectMapper mapper) {
+                              MetricRepository metrics, TraceRepository traces, ObjectMapper mapper,
+                              CompanyScopeResolver scope) {
         this.reports = reports;
         this.logs = logs;
         this.metrics = metrics;
         this.traces = traces;
         this.mapper = mapper;
+        this.scope = scope;
+    }
+
+    /** 회사 격리를 spec에 결합 — ADMIN이면 그대로, 그 외는 companyCode 한정. */
+    private Specification<Report> scoped(Specification<Report> spec) {
+        CompanyScopeResolver.Scope s = scope.current();
+        return s.all() ? spec : spec.and(ReportSpecs.company(s.companyCode()));
     }
 
     @Transactional(readOnly = true)
@@ -65,12 +75,17 @@ public class ReportQueryService {
         if (hasText(search)) {
             spec = spec.and(ReportSpecs.searchLike(search));
         }
-        return reports.findAll(spec, sanitizeSort(pageable)).map(this::toListItem);
+        return reports.findAll(scoped(spec), sanitizeSort(pageable)).map(this::toListItem);
     }
 
     @Transactional(readOnly = true)
     public ReportDetailResponse detail(Long id) {
         Report r = reports.findByIdAndStatus(id, DONE).orElseThrow(() -> new ReportNotFoundException(id));
+        // 타 회사 리포트는 존재를 숨긴다(404) — USER는 자사 코드 일치만. ADMIN은 통과.
+        CompanyScopeResolver.Scope s = scope.current();
+        if (!s.all() && !Objects.equals(r.getCompanyCode(), s.companyCode())) {
+            throw new ReportNotFoundException(id);
+        }
         var counts = new ReportDetailResponse.Counts(
                 logs.countByReportId(id), metrics.countByReportId(id), traces.countByReportId(id));
         var view = new ReportDetailResponse.ReportView(
@@ -124,12 +139,16 @@ public class ReportQueryService {
 
     @Transactional(readOnly = true)
     public DashboardResponse dashboard() {
-        long total = reports.countByStatus(DONE);
-        long high = reports.countByStatusAndSeverity(DONE, "HIGH");
+        // spec 기반 카운트로 통일 — 회사 격리(scoped)를 목록·상세와 같은 방식으로 적용.
+        Specification<Report> base = scoped(ReportSpecs.doneOnly());
+        long total = reports.count(base);
+        long high = reports.count(base.and(ReportSpecs.severity("HIGH")));
         KstDates.UtcRange todayKst = KstDates.todayRangeUtc();
-        long today = reports.countByStatusAndTriggerTimeGreaterThanEqualAndTriggerTimeLessThan(
-                DONE, todayKst.from(), todayKst.to());
-        List<ReportListItem> recent = reports.findTop5ByStatusOrderByCreatedAtDesc(DONE)
+        long today = reports.count(base
+                .and(ReportSpecs.detectedFrom(todayKst.from()))
+                .and(ReportSpecs.detectedBefore(todayKst.to())));
+        List<ReportListItem> recent = reports
+                .findAll(base, PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")))
                 .stream().map(this::toListItem).toList();
         return new DashboardResponse(new DashboardResponse.Summary(total, high, today), recent);
     }

@@ -17,6 +17,11 @@ final class ReportSpecs {
         return (root, q, cb) -> cb.equal(root.get("severity"), severity);
     }
 
+    /** 회사 격리 — companyCode 일치 행만. equal이라 NULL(레거시 미귀속)은 자동 제외. */
+    static Specification<Report> company(String companyCode) {
+        return (root, q, cb) -> cb.equal(root.get("companyCode"), companyCode);
+    }
+
     // 날짜 필터 축 = detectedAt(=trigger_time, 장애 발생 시각). 저장 시각(createdAt) 아님.
     static Specification<Report> detectedFrom(LocalDateTime fromInclusiveUtc) {
         return (root, q, cb) -> cb.greaterThanOrEqualTo(root.get("triggerTime"), fromInclusiveUtc);
