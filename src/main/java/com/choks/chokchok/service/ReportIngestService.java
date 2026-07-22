@@ -5,6 +5,7 @@ import com.choks.chokchok.domain.Metric;
 import com.choks.chokchok.domain.Report;
 import com.choks.chokchok.domain.SignalRow;
 import com.choks.chokchok.domain.Trace;
+import com.choks.chokchok.repository.CompanyRepository;
 import com.choks.chokchok.repository.LogRepository;
 import com.choks.chokchok.repository.MetricRepository;
 import com.choks.chokchok.repository.ReportRepository;
@@ -36,20 +37,27 @@ public class ReportIngestService {
     private final MetricRepository metrics;
     private final TraceRepository traces;
     private final TriggerDedupLookup dedup;
+    private final CompanyRepository companies;
 
     public ReportIngestService(ReportRepository reports, LogRepository logs,
                                MetricRepository metrics, TraceRepository traces,
-                               TriggerDedupLookup dedup) {
+                               TriggerDedupLookup dedup, CompanyRepository companies) {
         this.reports = reports;
         this.logs = logs;
         this.metrics = metrics;
         this.traces = traces;
         this.dedup = dedup;
+        this.companies = companies;
     }
 
     @Transactional
     public Long save(IngestRequest req) {
         validate(req);
+
+        // A안: company는 사전 등록 전제 — 미등록 코드는 422로 거부(자동 생성 없음)
+        if (!companies.existsByCompanyCode(req.companyCode())) {
+            throw new InvalidPayloadException("unknown companyCode: " + req.companyCode());
+        }
 
         LocalDateTime triggerTime =
                 Timestamps.parseUtc(req.triggerInfo().get("triggerTime").asString());
@@ -60,6 +68,7 @@ public class ReportIngestService {
         });
 
         Report report = new Report();
+        report.setCompanyCode(req.companyCode());
         report.setStatus(req.status());
         report.setSeverity(req.severity());                 // D-022: NULL 허용
         if (req.window() != null) {
@@ -111,6 +120,9 @@ public class ReportIngestService {
         }
         if (req.triggerInfo() == null || req.triggerInfo().get("triggerTime") == null) {
             throw new InvalidPayloadException("triggerInfo.triggerTime is required");
+        }
+        if (req.companyCode() == null || req.companyCode().isBlank()) {
+            throw new InvalidPayloadException("companyCode is required");
         }
         // result는 DONE일 때만 필수 — FAILED는 분석 결과가 없으므로 면제.
         if ("DONE".equals(req.status()) && req.result() == null) {

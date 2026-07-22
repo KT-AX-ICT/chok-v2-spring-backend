@@ -24,6 +24,10 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** 소속 회사 코드 (V2). company.company_code FK — 사전 등록된 회사만(A안). 코드 도입 전 리포트는 NULL. */
+    @Column(name = "company_code", length = 32)
+    private String companyCode;
+
     /** MVP는 항상 DONE (분석 완료 후 저장, D-023). 내부 전용 — 프론트 미노출. */
     @Column(length = 32, nullable = false)
     private String status;

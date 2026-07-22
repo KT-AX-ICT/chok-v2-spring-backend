@@ -15,14 +15,14 @@ import tools.jackson.databind.ObjectMapper;
 class IngestValidationTest {
 
     private static final ObjectMapper M = new ObjectMapper();
-    private final ReportIngestService svc = new ReportIngestService(null, null, null, null, null);
+    private final ReportIngestService svc = new ReportIngestService(null, null, null, null, null, null);
 
     private static JsonNode trigger() {
         return M.readTree("{\"triggerTime\":\"2026-07-20 12:00:00.000\"}");
     }
 
     private static IngestRequest req(String status, JsonNode triggerInfo, JsonNode result) {
-        return new IngestRequest(null, null, triggerInfo, null, null, null, status, null, result, null);
+        return new IngestRequest(null, "SN001", null, triggerInfo, null, null, null, status, null, result, null);
     }
 
     @Test
@@ -57,5 +57,14 @@ class IngestValidationTest {
     void failed_without_triggerTime_rejected() {
         // triggerTime은 DONE·FAILED 공통 필수(멱등키+감지시각)
         assertThrows(InvalidPayloadException.class, () -> svc.validate(req("FAILED", null, null)));
+    }
+
+    @Test
+    void missing_companyCode_rejected() {
+        // companyCode는 필수 — 사전 등록된 company 조회 키 (A안). 존재 검증은 DB 필요 → curl E2E
+        IngestRequest noCode = new IngestRequest(null, null, null, trigger(), null, null, null, "FAILED", null, null, null);
+        assertThrows(InvalidPayloadException.class, () -> svc.validate(noCode));
+        IngestRequest blankCode = new IngestRequest(null, " ", null, trigger(), null, null, null, "FAILED", null, null, null);
+        assertThrows(InvalidPayloadException.class, () -> svc.validate(blankCode));
     }
 }
