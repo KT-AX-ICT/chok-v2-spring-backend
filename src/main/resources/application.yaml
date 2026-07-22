@@ -12,7 +12,12 @@ spring:
       ddl-auto: validate
     open-in-view: false
 
-# CORS 허용 origin (CorsConfig). 배포 도메인 확정 시 콤마로 추가: "http://localhost:5173,https://chok.example.com"
+# CORS 허용 origin (SecurityConfig). 배포 도메인 확정 시 콤마로 추가: "http://localhost:5173,https://chok.example.com"
 app:
   cors:
     allowed-origins: ${APP_CORS_ORIGINS:http://localhost:5173}
+  # JWT 로그인. secret은 HS256 → 최소 32바이트. 프로덕션은 JWT_SECRET 환경변수로 반드시 override.
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-change-me-min-32-bytes-long-please}
+    access-ttl-minutes: ${JWT_ACCESS_TTL_MIN:60}
+    refresh-ttl-days: ${JWT_REFRESH_TTL_DAYS:14}

@@ -1,6 +1,7 @@
 package com.choks.chokchok.web;
 
 import com.choks.chokchok.service.DuplicateTriggerException;
+import com.choks.chokchok.service.InvalidCredentialsException;
 import com.choks.chokchok.service.InvalidPayloadException;
 import com.choks.chokchok.service.ReportNotFoundException;
 import java.time.format.DateTimeParseException;
@@ -24,6 +25,13 @@ public class GlobalExceptionHandler {
             err.put("reportId", e.getReportId());
         }
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", err));
+    }
+
+    // 로그인/리프레시 실패(컨트롤러 경로). 필터단 토큰 거부는 SecurityConfig의 EntryPoint가 401 처리.
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> invalidCredentials(InvalidCredentialsException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", errorBody("INVALID_CREDENTIALS", e.getMessage())));
     }
 
     @ExceptionHandler(ReportNotFoundException.class)

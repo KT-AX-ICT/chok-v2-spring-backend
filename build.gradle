@@ -21,6 +21,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	// JWT 로그인: security(필터체인·BCrypt) + oauth2-resource-server(Nimbus JWT 인코더/디코더, 대칭키)
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	// 스키마는 Flyway 마이그레이션이 부팅 시 적용(ddl-auto:validate는 정합 검증만). flyway-mysql은 MySQL 8.4 지원 모듈
 	// Boot 4.0은 autoconfigure 모듈 분리 → 자동 실행에 spring-boot-flyway(통합 모듈) 필수. flyway-core는 전이로 딸려옴
 	implementation 'org.springframework.boot:spring-boot-flyway'
@@ -32,6 +35,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'org.mockito:mockito-core'
 	// contextLoads(@SpringBootTest)만 실제 MySQL 필요 → Testcontainers로 자체 기동. 유닛 테스트는 Docker 무관
 	// Boot 4.0.7 의존성 관리가 testcontainers 버전을 안 잡아줘 BOM으로 버전 고정
 	testImplementation platform('org.testcontainers:testcontainers-bom:1.20.4')
