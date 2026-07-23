@@ -30,6 +30,7 @@ services:
       DB_NAME: ${DB_NAME:-chokchok}
       DB_USER: ${DB_USER:-chokchok}
       DB_PASSWORD: ${DB_PASSWORD:-chokchok}
+      APP_CORS_ORIGINS: ${APP_CORS_ORIGINS:-http://localhost:5173}
     ports:
       - "8080:8080"
     depends_on:

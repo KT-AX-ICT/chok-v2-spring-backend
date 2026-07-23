@@ -41,5 +41,8 @@ out/
 
 docs/
 
+### local (not shared) ###
+CLAUDE.md
+
 ### secrets ###
 .env
