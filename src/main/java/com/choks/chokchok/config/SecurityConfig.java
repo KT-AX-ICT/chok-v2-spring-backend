@@ -16,9 +16,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -63,8 +69,26 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(authenticationEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler())
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                        .jwt(jwt -> jwt.decoder(accessTokenDecoder())
+                        .jwtAuthenticationConverter(jwtAuthenticationConverter())));
         return http.build();
+    }
+
+    /** 리소스 서버 전용 디코더: 표준(서명·만료) 검증 + type=access 강제. refresh 토큰의 일반 API 사용 차단. */
+    private JwtDecoder accessTokenDecoder() {
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key()).macAlgorithm(MacAlgorithm.HS256).build();
+        decoder.setJwtValidator(accessTokenValidator());
+        return decoder;
+    }
+
+    /** 표준 검증기 + "type 클레임이 access여야 함" 검증기 결합. */
+    static OAuth2TokenValidator<Jwt> accessTokenValidator() {
+        OAuth2TokenValidator<Jwt> requireAccessType = token ->
+                "access".equals(token.getClaimAsString("type"))
+                        ? OAuth2TokenValidatorResult.success()
+                        : OAuth2TokenValidatorResult.failure(
+                                new OAuth2Error("invalid_token", "access 토큰이 아닙니다", null));
+        return new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefault(), requireAccessType);
     }
 
     private SecretKey key() {

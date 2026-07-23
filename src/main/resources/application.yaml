@@ -16,8 +16,8 @@ spring:
 app:
   cors:
     allowed-origins: ${APP_CORS_ORIGINS:http://localhost:5173}
-  # JWT 로그인. secret은 HS256 → 최소 32바이트. 프로덕션은 JWT_SECRET 환경변수로 반드시 override.
+  # JWT 로그인. secret은 HS256 → 최소 32바이트. 기본값 없음(fail-closed) — 모든 실행 경로에서 JWT_SECRET 필수.
   jwt:
-    secret: ${JWT_SECRET:dev-only-secret-change-me-min-32-bytes-long-please}
+    secret: ${JWT_SECRET}
     access-ttl-minutes: ${JWT_ACCESS_TTL_MIN:60}
     refresh-ttl-days: ${JWT_REFRESH_TTL_DAYS:14}

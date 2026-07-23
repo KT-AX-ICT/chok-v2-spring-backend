@@ -5,6 +5,7 @@ import com.choks.chokchok.web.dto.LoginRequest;
 import com.choks.chokchok.web.dto.MeResponse;
 import com.choks.chokchok.web.dto.RefreshRequest;
 import com.choks.chokchok.web.dto.TokenResponse;
+import jakarta.validation.Valid;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,12 +26,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public TokenResponse login(@RequestBody LoginRequest req) {
+    public TokenResponse login(@Valid @RequestBody LoginRequest req) {
         return auth.login(req.email(), req.password());
     }
 
     @PostMapping("/refresh")
-    public TokenResponse refresh(@RequestBody RefreshRequest req) {
+    public TokenResponse refresh(@Valid @RequestBody RefreshRequest req) {
         return auth.refresh(req.refreshToken());
     }
 

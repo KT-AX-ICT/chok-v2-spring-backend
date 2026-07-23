@@ -10,6 +10,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -42,7 +43,8 @@ public class GlobalExceptionHandler {
 
     // 저장 본문(422)뿐 아니라 조회 파라미터(from/to 날짜·{id} 타입) 파싱 실패도 같은 봉투로 — 500 방지.
     @ExceptionHandler({InvalidPayloadException.class, HttpMessageNotReadableException.class,
-            MethodArgumentTypeMismatchException.class, DateTimeParseException.class})
+            MethodArgumentTypeMismatchException.class, DateTimeParseException.class,
+            MethodArgumentNotValidException.class})
     public ResponseEntity<Map<String, Object>> invalid(Exception e) {
         String msg;
         if (e instanceof InvalidPayloadException) {
@@ -51,6 +53,10 @@ public class GlobalExceptionHandler {
             msg = "잘못된 파라미터: " + mism.getName();
         } else if (e instanceof DateTimeParseException dtp) {
             msg = "잘못된 날짜 형식: " + dtp.getParsedString();
+        } else if (e instanceof MethodArgumentNotValidException val) {
+            var fieldError = val.getBindingResult().getFieldError();
+            msg = fieldError == null ? "요청 값이 유효하지 않습니다"
+                    : fieldError.getField() + ": " + fieldError.getDefaultMessage();
         } else {
             msg = "요청 본문을 파싱할 수 없습니다";
         }
