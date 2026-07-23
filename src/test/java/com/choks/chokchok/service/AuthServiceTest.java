@@ -50,7 +50,7 @@ class AuthServiceTest {
     private User seedUser() {
         Company company = new Company();
         company.setCompanyCode("CHOK");
-        company.setCompanyName("CHOK");
+        company.setCompanyName("촉촉 주식회사");
         User user = new User();
         user.setEmail(EMAIL);
         user.setName("관리자");
@@ -74,6 +74,7 @@ class AuthServiceTest {
         assertEquals(EMAIL, access.getSubject());
         assertEquals("ADMIN", access.getClaimAsString("role"));
         assertEquals("CHOK", access.getClaimAsString("companyCode"));
+        assertEquals("촉촉 주식회사", access.getClaimAsString("companyName"));
         assertEquals("access", access.getClaimAsString("type"));
         assertEquals("refresh", decoder.decode(res.refreshToken()).getClaimAsString("type"));
     }

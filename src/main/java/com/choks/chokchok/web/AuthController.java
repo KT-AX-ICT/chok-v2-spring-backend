@@ -39,6 +39,7 @@ public class AuthController {
     public MeResponse me(JwtAuthenticationToken authentication) {
         Jwt token = authentication.getToken();
         return new MeResponse(token.getSubject(), token.getClaimAsString("name"),
-                token.getClaimAsString("role"), token.getClaimAsString("companyCode"));
+                token.getClaimAsString("role"), token.getClaimAsString("companyCode"),
+                token.getClaimAsString("companyName"));
     }
 }

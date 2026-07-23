@@ -50,6 +50,7 @@ public class JwtService {
                 .claim("role", user.getRole())
                 .claim("name", user.getName())
                 .claim("companyCode", user.getCompany().getCompanyCode())
+                .claim("companyName", user.getCompany().getCompanyName())
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
