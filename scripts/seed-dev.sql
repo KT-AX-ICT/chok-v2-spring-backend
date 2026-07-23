@@ -13,7 +13,7 @@
 INSERT IGNORE INTO company (company_code, company_name) VALUES
   ('SN001', 'SN'),
   ('TT001', 'TT'),
-  ('CHOK',  'CHOK');
+  ('CHOK',  '촉촉 주식회사');
 
 INSERT IGNORE INTO users (company_id, email, password_hash, name, role)
 SELECT c.id, 'admin@chokchok.dev', '$2y$10$/6gOzp6NHrnJ5bDiIRhhUuz0Kfg3ggLclsBAOQHohlHDIbVY6zAn.', '관리자', 'ADMIN'
