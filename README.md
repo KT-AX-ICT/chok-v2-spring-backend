@@ -38,6 +38,26 @@ docker compose up --build
 
 중지: `docker compose down` (데이터 포함 초기화는 `docker compose down -v`)
 
+## sample 계정 시드 (로컬 데모 필수)
+
+앱이 한 번 기동해 Flyway V2까지 적용되면 `company`·`users` 테이블은 생기지만 **계정 데이터는 비어 있다.** 로그인하려면 시드 SQL을 한 번 실행해야 한다 (이 단계를 빠뜨리면 sample 계정으로 로그인 불가).
+
+```bash
+# 앱(+db) 기동 후, DB 컨테이너에 시드 실행 (재실행 안전 — 멱등)
+docker compose cp scripts/seed-dev.sql db:/tmp/seed-dev.sql
+docker compose exec db sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --default-character-set=utf8mb4 "$MYSQL_DATABASE" < /tmp/seed-dev.sql'
+```
+
+> PowerShell 파이프(`|`)로 실행하면 한글이 `?`로 깨지므로 위 `cp` + `exec` 방식을 사용한다.
+
+시드 후 아래 계정으로 로그인 (공통 비밀번호 `chokchok1!`):
+
+| 이메일 | 역할 | 회사 |
+|---|---|---|
+| `admin@chokchok.dev` | ADMIN | CHOK (촉촉 주식회사) |
+| `sn.user@chokchok.dev` | USER | SN001 |
+| `tt.user@chokchok.dev` | USER | TT001 |
+
 ## 로컬 개발 실행 (gradlew)
 
 앱을 IDE/gradle로 직접 돌리고 DB만 컨테이너로 쓰는 경우.
@@ -54,6 +74,8 @@ export INTERNAL_SHARED_SECRET="로컬용-공유-시크릿"
 ```
 
 > Windows PowerShell은 `export` 대신 `$env:JWT_SECRET="..."` 형식 사용.
+
+이 경로도 첫 로그인 전 [sample 계정 시드](#sample-계정-시드-로컬-데모-필수)를 실행해야 한다.
 
 ## 환경변수
 
