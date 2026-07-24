@@ -21,3 +21,6 @@ app:
     secret: ${JWT_SECRET}
     access-ttl-minutes: ${JWT_ACCESS_TTL_MIN:60}
     refresh-ttl-days: ${JWT_REFRESH_TTL_DAYS:14}
+  # FastAPI→Spring internal 수집 API 공유 시크릿. 기본값 없음(fail-closed) — 미설정 시 기동 실패.
+  internal:
+    shared-secret: ${INTERNAL_SHARED_SECRET}

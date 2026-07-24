@@ -30,6 +30,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.cors.CorsConfiguration;
@@ -45,12 +46,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final String secret;
+    private final String internalSecret;
     private final String[] allowedOrigins;
 
     public SecurityConfig(
             @Value("${app.jwt.secret}") String secret,
+            @Value("${app.internal.shared-secret}") String internalSecret,
             @Value("${app.cors.allowed-origins:http://localhost:5173}") String[] allowedOrigins) {
         this.secret = secret;
+        this.internalSecret = internalSecret;
         this.allowedOrigins = allowedOrigins;
     }
 
@@ -63,9 +67,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
-                        // ponytail: internal 수집은 서버-투-서버(FastAPI→Spring). 사용자 JWT 대상 아님. 공유시크릿은 후속.
+                        // internal 수집은 서버-투-서버(FastAPI→Spring). JWT 대신 InternalSecretFilter가 공유시크릿 검증.
                         .requestMatchers("/api/internal/**").permitAll()
                         .anyRequest().authenticated())
+                // TODO(임시): FastAPI 송신측 X-Internal-Secret 헤더 미구현 → 검증 비활성화. 연동되면 주석 해제.
+                // .addFilterBefore(new InternalSecretFilter(internalSecret),
+                //         UsernamePasswordAuthenticationFilter.class)
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(authenticationEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler())

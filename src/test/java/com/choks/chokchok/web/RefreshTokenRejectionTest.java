@@ -21,7 +21,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * refresh 토큰을 Bearer로 보호 API에 제출하면 401이어야 함. 단위 테스트(AccessTokenValidatorTest)가
  * 못 잡는 "필터체인 배선 누락" 회귀를 잡는다. /api/auth/me는 클레임만 읽어 DB 불필요.
  */
-@SpringBootTest(properties = "app.jwt.secret=test-secret-test-secret-test-secret-32b!")
+@SpringBootTest(properties = {
+        "app.jwt.secret=test-secret-test-secret-test-secret-32b!",
+        "app.internal.shared-secret=test-internal-secret"})
 @AutoConfigureMockMvc
 @Testcontainers
 class RefreshTokenRejectionTest {

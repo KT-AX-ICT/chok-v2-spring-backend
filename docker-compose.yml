@@ -33,6 +33,7 @@ services:
       APP_CORS_ORIGINS: ${APP_CORS_ORIGINS:-http://localhost:5173}
       # 미설정 시 기동 실패(:? 문법) — 소스에 커밋된 dev 시크릿으로 배포되는 사고 차단
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env (min 32 bytes)}
+      INTERNAL_SHARED_SECRET: ${INTERNAL_SHARED_SECRET:?INTERNAL_SHARED_SECRET must be set in .env}
     ports:
       # 127.0.0.1 바인딩 = 외부 인터페이스 노출 차단(db와 동일 패턴).
       # 같은 PC의 FastAPI 컨테이너는 host.docker.internal:8080으로 접속 가능(Docker Desktop)

@@ -7,8 +7,10 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-// JWT_SECRET은 fail-closed(기본값 없음) → 컨텍스트 로딩용 테스트 시크릿을 주입
-@SpringBootTest(properties = "app.jwt.secret=test-secret-test-secret-test-secret-32b!")
+// JWT_SECRET·INTERNAL_SHARED_SECRET은 fail-closed(기본값 없음) → 컨텍스트 로딩용 테스트 시크릿을 주입
+@SpringBootTest(properties = {
+		"app.jwt.secret=test-secret-test-secret-test-secret-32b!",
+		"app.internal.shared-secret=test-internal-secret"})
 @Testcontainers
 class ChokchokApplicationTests {
 
