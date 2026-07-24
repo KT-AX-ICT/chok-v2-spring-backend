@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── 1) 테스트: JDK 21로 gradle 테스트 ──
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: JDK 21 설치
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: gradlew 실행권한
+        run: chmod +x ./gradlew
+      - name: 테스트
+        run: ./gradlew test
+
+  # ── 2) 빌드: main push일 때만 → 이미지 빌드 → GHCR push → deploy에 digest PR 자동생성 ──
+  build:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    uses: KT-AX-ICT/chok-v2-deploy/.github/workflows/reusable-docker-build.yml@main
+    with:
+      image_name: chok-v2-spring-backend
+      service_key: spring
+    secrets:
+      DEPLOY_BOT_APP_ID: ${{ secrets.DEPLOY_BOT_APP_ID }}
+      DEPLOY_BOT_PRIVATE_KEY: ${{ secrets.DEPLOY_BOT_PRIVATE_KEY }}
